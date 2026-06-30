@@ -9,14 +9,14 @@ const BACKUP_DIR = path.join(DATA_DIR,'backups');
 const TICKET_DIR = path.join(ROOT,'tickets');
 const LOG_DIR = path.join(ROOT,'logs');
 const DB_FILE = path.join(DATA_DIR,'petropos-data.json');
-const VERSION = '0.5.0 Pro Piloto';
+const VERSION = '1.0 RC Build 002';
 
 function ensureDirs(){ [DATA_DIR,BACKUP_DIR,TICKET_DIR,LOG_DIR,path.join(ROOT,'config')].forEach(d=>{ if(!fs.existsSync(d)) fs.mkdirSync(d,{recursive:true}); }); }
 function now(){ return new Date().toISOString(); }
 function today(){ return new Date().toISOString().slice(0,10); }
 function seed(){ return {
   version: VERSION,
-  negocio:{nombre:'PetroPOS Demo', razonSocial:'', cuit:'', direccion:'', telefono:'', email:'', iva:'Responsable Monotributo', ticketMm:'80', impresora:'Windows / TXT'},
+  negocio:{nombre:'PetroPOS Professional', razonSocial:'', cuit:'', direccion:'', telefono:'', email:'', iva:'Responsable Monotributo', ticketMm:'80', impresora:'Windows / TXT'},
   usuarios:[{id:1,usuario:'admin',clave:'admin123',nombre:'Administrador',rol:'ADMIN'},{id:2,usuario:'vendedor',clave:'venta123',nombre:'Vendedor',rol:'VENDEDOR'}],
   caja:{abierta:false,fecha:null,usuario:null,saldoInicial:0,movimientos:[]},
   categorias:['General','Bebidas','Almacén','Limpieza','Ferretería'],
