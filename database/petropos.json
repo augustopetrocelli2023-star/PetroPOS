@@ -1,0 +1,173 @@
+{
+  "version": "0.4.0",
+  "negocio": {
+    "nombre": "PetroPOS Demo",
+    "razonSocial": "",
+    "cuit": "",
+    "direccion": "",
+    "telefono": "",
+    "ticketAncho": "80mm",
+    "impresora": "Windows / PDF-TXT",
+    "pointModo": "simulado"
+  },
+  "usuarios": [
+    {
+      "id": 1,
+      "user": "admin",
+      "pass": "admin123",
+      "nombre": "Administrador",
+      "rol": "ADMIN"
+    },
+    {
+      "id": 2,
+      "user": "vendedor",
+      "pass": "venta123",
+      "nombre": "Vendedor",
+      "rol": "VENDEDOR"
+    }
+  ],
+  "productos": [
+    {
+      "id": 1,
+      "codigo": "P0001",
+      "barra": "7790001000011",
+      "descripcion": "Coca Cola 2.25L",
+      "marca": "Coca Cola",
+      "categoria": "Bebidas",
+      "proveedor": "Proveedor Demo",
+      "costo": 1800,
+      "precio": 3200,
+      "iva": 21,
+      "stock": 24,
+      "minimo": 5,
+      "activo": true
+    },
+    {
+      "id": 2,
+      "codigo": "P0002",
+      "barra": "7790001000028",
+      "descripcion": "Papas Fritas 150g",
+      "marca": "Demo",
+      "categoria": "Snacks",
+      "proveedor": "Proveedor Demo",
+      "costo": 900,
+      "precio": 1800,
+      "iva": 21,
+      "stock": 18,
+      "minimo": 4,
+      "activo": true
+    }
+  ],
+  "clientes": [
+    {
+      "id": 1,
+      "nombre": "Consumidor Final",
+      "dni": "",
+      "telefono": "",
+      "saldo": 0
+    }
+  ],
+  "proveedores": [
+    {
+      "id": 1,
+      "nombre": "Proveedor Demo",
+      "telefono": "",
+      "email": ""
+    }
+  ],
+  "ventas": [
+    {
+      "id": 1782782696206,
+      "numero": "VTA-000001",
+      "fecha": "29/6/2026, 10:24:56 p.m.",
+      "usuario": "Administrador",
+      "cliente": "Consumidor Final",
+      "items": [
+        {
+          "id": 1,
+          "descripcion": "Coca Cola 2.25L",
+          "precio": 3200,
+          "cantidad": 1
+        }
+      ],
+      "pago": {
+        "tipo": "Mercado Pago QR"
+      },
+      "total": 3200,
+      "ticket": "C:\\PetroPOS\\tickets\\VTA-000001.txt"
+    }
+  ],
+  "caja": null,
+  "auditoria": [
+    {
+      "fecha": "29/6/2026, 10:24:56 p.m.",
+      "usuario": "Administrador",
+      "accion": "VENTA",
+      "detalle": "VTA-000001 $3200",
+      "pc": "DESKTOP-VCTG82R"
+    },
+    {
+      "fecha": "29/6/2026, 10:24:20 p.m.",
+      "usuario": "Administrador",
+      "accion": "LOGIN",
+      "detalle": "Ingreso al sistema",
+      "pc": "DESKTOP-VCTG82R"
+    },
+    {
+      "fecha": "29/6/2026, 10:24:20 p.m.",
+      "usuario": "Administrador",
+      "accion": "LOGIN",
+      "detalle": "Ingreso al sistema",
+      "pc": "DESKTOP-VCTG82R"
+    },
+    {
+      "fecha": "29/6/2026, 10:24:20 p.m.",
+      "usuario": "Administrador",
+      "accion": "LOGIN",
+      "detalle": "Ingreso al sistema",
+      "pc": "DESKTOP-VCTG82R"
+    },
+    {
+      "fecha": "29/6/2026, 10:24:20 p.m.",
+      "usuario": "Administrador",
+      "accion": "LOGIN",
+      "detalle": "Ingreso al sistema",
+      "pc": "DESKTOP-VCTG82R"
+    },
+    {
+      "fecha": "29/6/2026, 10:24:18 p.m.",
+      "usuario": "Administrador",
+      "accion": "LOGIN",
+      "detalle": "Ingreso al sistema",
+      "pc": "DESKTOP-VCTG82R"
+    },
+    {
+      "fecha": "29/6/2026, 10:24:17 p.m.",
+      "usuario": "Administrador",
+      "accion": "LOGIN",
+      "detalle": "Ingreso al sistema",
+      "pc": "DESKTOP-VCTG82R"
+    },
+    {
+      "fecha": "29/6/2026, 10:24:05 p.m.",
+      "usuario": "Administrador",
+      "accion": "LOGIN",
+      "detalle": "Ingreso al sistema",
+      "pc": "DESKTOP-VCTG82R"
+    },
+    {
+      "fecha": "29/6/2026, 10:24:03 p.m.",
+      "usuario": "Administrador",
+      "accion": "LOGIN",
+      "detalle": "Ingreso al sistema",
+      "pc": "DESKTOP-VCTG82R"
+    },
+    {
+      "fecha": "29/6/2026, 10:24:01 p.m.",
+      "usuario": "Administrador",
+      "accion": "LOGIN",
+      "detalle": "Ingreso al sistema",
+      "pc": "DESKTOP-VCTG82R"
+    }
+  ]
+}

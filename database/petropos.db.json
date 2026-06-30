@@ -1,0 +1,92 @@
+{
+  "meta": {
+    "version": "0.3.1",
+    "createdAt": "2026-06-30T01:14:56.716Z",
+    "engine": "local-json-compatible-sqlite-future"
+  },
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "name": "Administrador",
+      "role": "admin",
+      "active": true
+    },
+    {
+      "id": 2,
+      "username": "vendedor",
+      "password": "venta123",
+      "name": "Vendedor",
+      "role": "seller",
+      "active": true
+    }
+  ],
+  "business": {
+    "name": "PetroPOS Demo",
+    "legalName": "",
+    "cuit": "",
+    "address": "",
+    "phone": "",
+    "email": "",
+    "iva": "Responsable Monotributo",
+    "currency": "ARS"
+  },
+  "categories": [
+    {
+      "id": 1,
+      "name": "General",
+      "active": true
+    }
+  ],
+  "brands": [
+    {
+      "id": 1,
+      "name": "Sin marca",
+      "active": true
+    }
+  ],
+  "suppliers": [
+    {
+      "id": 1,
+      "name": "Proveedor General",
+      "phone": "",
+      "email": "",
+      "active": true
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "internalCode": "PRD-000001",
+      "barcode": "779000000001",
+      "description": "Producto de prueba",
+      "brandId": 1,
+      "categoryId": 1,
+      "supplierId": 1,
+      "cost": 1000,
+      "price": 1500,
+      "iva": 21,
+      "stock": 10,
+      "minStock": 2,
+      "maxStock": 50,
+      "active": true,
+      "image": "",
+      "createdAt": "2026-06-30T01:14:56.716Z",
+      "updatedAt": "2026-06-30T01:14:56.716Z"
+    }
+  ],
+  "clients": [],
+  "sales": [],
+  "cashSessions": [],
+  "audit": [
+    {
+      "id": 1782782099059,
+      "at": "2026-06-30T01:14:59.059Z",
+      "user": "admin",
+      "pc": "DESKTOP-VCTG82R",
+      "action": "LOGIN",
+      "detail": "Inicio de sesión"
+    }
+  ]
+}

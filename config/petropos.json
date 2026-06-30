@@ -1,0 +1,9 @@
+{
+  "version": "0.3.1",
+  "demoMode": true,
+  "ticketSize": "80mm",
+  "defaultPrinter": "",
+  "automaticBackups": true,
+  "backupOnStart": true,
+  "businessConfigured": false
+}

@@ -1,0 +1,193 @@
+{
+  "version": "0.5.0 Pro Piloto",
+  "negocio": {
+    "nombre": "PetroPOS Demo",
+    "razonSocial": "",
+    "cuit": "",
+    "direccion": "",
+    "telefono": "",
+    "email": "",
+    "iva": "Responsable Monotributo",
+    "ticketMm": "80",
+    "impresora": "Windows / TXT"
+  },
+  "usuarios": [
+    {
+      "id": 1,
+      "usuario": "admin",
+      "clave": "admin123",
+      "nombre": "Administrador",
+      "rol": "ADMIN"
+    },
+    {
+      "id": 2,
+      "usuario": "vendedor",
+      "clave": "venta123",
+      "nombre": "Vendedor",
+      "rol": "VENDEDOR"
+    }
+  ],
+  "caja": {
+    "abierta": true,
+    "fecha": "2026-06-30T01:30:10.837Z",
+    "usuario": "admin",
+    "saldoInicial": 100,
+    "movimientos": [
+      {
+        "fecha": "2026-06-30T01:30:27.686Z",
+        "tipo": "VENTA",
+        "detalle": "VTA-000001",
+        "monto": 1100,
+        "pago": "Efectivo",
+        "usuario": "admin"
+      }
+    ]
+  },
+  "categorias": [
+    "General",
+    "Bebidas",
+    "Almacén",
+    "Limpieza",
+    "Ferretería"
+  ],
+  "marcas": [
+    "Sin marca",
+    "Coca Cola",
+    "Pepsi",
+    "Genérica"
+  ],
+  "proveedores": [
+    {
+      "id": 1,
+      "nombre": "Proveedor General",
+      "telefono": "",
+      "email": "",
+      "direccion": "",
+      "activo": true
+    }
+  ],
+  "clientes": [
+    {
+      "id": 1,
+      "nombre": "Consumidor Final",
+      "dni": "",
+      "telefono": "",
+      "email": "",
+      "saldo": 0,
+      "activo": true
+    }
+  ],
+  "productos": [
+    {
+      "id": 1782782964374,
+      "codigo": "P000003",
+      "barra": "123456789",
+      "descripcion": "pepsi",
+      "marca": "Pepsi",
+      "categoria": "Bebidas",
+      "proveedor": "Proveedor General",
+      "costo": 1000,
+      "precio": 1100,
+      "iva": 21,
+      "stock": 10,
+      "minimo": 10,
+      "activo": true,
+      "createdAt": "2026-06-30T01:29:24.374Z"
+    },
+    {
+      "id": 1,
+      "codigo": "P000001",
+      "barra": "7790000000011",
+      "descripcion": "Coca Cola 2.25L",
+      "marca": "Coca Cola",
+      "categoria": "Bebidas",
+      "proveedor": "Proveedor General",
+      "costo": 1800,
+      "precio": 3200,
+      "iva": 21,
+      "stock": 20,
+      "minimo": 5,
+      "activo": true,
+      "imagen": "",
+      "createdAt": "2026-06-30T01:28:35.305Z"
+    },
+    {
+      "id": 2,
+      "codigo": "P000002",
+      "barra": "7790000000028",
+      "descripcion": "Producto demo",
+      "marca": "Genérica",
+      "categoria": "General",
+      "proveedor": "Proveedor General",
+      "costo": 500,
+      "precio": 900,
+      "iva": 21,
+      "stock": 15,
+      "minimo": 3,
+      "activo": true,
+      "imagen": "",
+      "createdAt": "2026-06-30T01:28:35.305Z"
+    }
+  ],
+  "ventas": [
+    {
+      "id": 1782783027686,
+      "numero": "VTA-000001",
+      "fecha": "2026-06-30T01:30:27.686Z",
+      "usuario": "admin",
+      "cliente": 1,
+      "pago": "Efectivo",
+      "items": [
+        {
+          "id": 1782782964374,
+          "descripcion": "pepsi",
+          "precio": 1100,
+          "cantidad": 1
+        }
+      ],
+      "total": 1100
+    }
+  ],
+  "auditoria": [
+    {
+      "fecha": "2026-06-30T01:30:27.711Z",
+      "usuario": "admin",
+      "rol": "ADMIN",
+      "pc": "DESKTOP-VCTG82R",
+      "accion": "VENTA_REALIZADA",
+      "detalle": "VTA-000001 $ 1.100,00"
+    },
+    {
+      "fecha": "2026-06-30T01:30:10.837Z",
+      "usuario": "admin",
+      "rol": "ADMIN",
+      "pc": "DESKTOP-VCTG82R",
+      "accion": "CAJA_ABIERTA",
+      "detalle": "$ 100,00"
+    },
+    {
+      "fecha": "2026-06-30T01:29:55.925Z",
+      "usuario": "admin",
+      "rol": "ADMIN",
+      "pc": "DESKTOP-VCTG82R",
+      "accion": "CAJA_CERRADA",
+      "detalle": "Cierre de caja"
+    },
+    {
+      "fecha": "2026-06-30T01:29:49.206Z",
+      "usuario": "admin",
+      "rol": "ADMIN",
+      "pc": "DESKTOP-VCTG82R",
+      "accion": "CAJA_ABIERTA",
+      "detalle": "$ 0,00"
+    },
+    {
+      "fecha": "2026-06-30T01:29:24.374Z",
+      "usuario": "admin",
+      "rol": "ADMIN",
+      "pc": "DESKTOP-VCTG82R",
+      "accion": "PRODUCTO_GUARDADO",
+      "detalle": "pepsi"
+    }
+  ]
+}

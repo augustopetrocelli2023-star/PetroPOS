@@ -1,0 +1,15 @@
+Negocio Demo
+
+
+CUIT: -
+-----------------------------
+Ticket: VTA-000002
+Fecha: 29/6/2026, 09:56:01
+Vendedor: admin
+-----------------------------
+Coca Cola 2.25L
+ 1 x $3.200,00 = $3.200,00
+-----------------------------
+TOTAL: $3.200,00
+Pago: Efectivo
+Gracias por su compra

@@ -1,0 +1,138 @@
+{
+  "version": "0.3.0",
+  "business": {
+    "nombre": "Negocio Demo",
+    "razonSocial": "",
+    "cuit": "",
+    "domicilio": "",
+    "telefono": "",
+    "email": "",
+    "iva": "Responsable Monotributo",
+    "moneda": "ARS",
+    "ticketLeyenda": "Gracias por su compra"
+  },
+  "users": [
+    {
+      "id": 1,
+      "usuario": "admin",
+      "clave": "admin123",
+      "nombre": "Administrador",
+      "rol": "admin",
+      "activo": true
+    },
+    {
+      "id": 2,
+      "usuario": "vendedor",
+      "clave": "venta123",
+      "nombre": "Vendedor",
+      "rol": "vendedor",
+      "activo": true
+    }
+  ],
+  "categories": [
+    "Almacén",
+    "Bebidas",
+    "Limpieza",
+    "Golosinas"
+  ],
+  "brands": [
+    "Genérica",
+    "Coca Cola",
+    "Arcor",
+    "La Serenísima"
+  ],
+  "suppliers": [
+    "Proveedor General"
+  ],
+  "products": [
+    {
+      "id": 1,
+      "codigo": "779000000001",
+      "interno": "PRD-000001",
+      "descripcion": "Coca Cola 2.25L",
+      "marca": "Coca Cola",
+      "categoria": "Bebidas",
+      "proveedor": "Proveedor General",
+      "costo": 1800,
+      "precio": 3200,
+      "iva": 21,
+      "stock": 23,
+      "stockMin": 5,
+      "activo": true
+    },
+    {
+      "id": 2,
+      "codigo": "779000000002",
+      "interno": "PRD-000002",
+      "descripcion": "Alfajor simple",
+      "marca": "Arcor",
+      "categoria": "Golosinas",
+      "proveedor": "Proveedor General",
+      "costo": 350,
+      "precio": 650,
+      "iva": 21,
+      "stock": 50,
+      "stockMin": 10,
+      "activo": true
+    }
+  ],
+  "sales": [
+    {
+      "id": 2,
+      "numero": "VTA-000002",
+      "fecha": "2026-06-30T00:56:01.382Z",
+      "items": [
+        {
+          "id": 1,
+          "codigo": "779000000001",
+          "descripcion": "Coca Cola 2.25L",
+          "precio": 3200,
+          "cantidad": 1
+        }
+      ],
+      "payment": "Efectivo",
+      "total": 3200,
+      "usuario": "admin"
+    },
+    {
+      "id": 1,
+      "numero": "VTA-000001",
+      "fecha": "2026-06-30T00:55:42.823Z",
+      "items": [
+        {
+          "id": 1,
+          "codigo": "779000000001",
+          "descripcion": "Coca Cola 2.25L",
+          "precio": 3200,
+          "cantidad": 1
+        }
+      ],
+      "payment": "Efectivo",
+      "total": 3200,
+      "usuario": "admin"
+    }
+  ],
+  "audits": [
+    {
+      "fecha": "2026-06-30T00:56:01.383Z",
+      "usuario": "admin",
+      "rol": "admin",
+      "accion": "VENTA",
+      "detalle": "VTA-000002 $3.200,00 - Efectivo"
+    },
+    {
+      "fecha": "2026-06-30T00:55:42.833Z",
+      "usuario": "admin",
+      "rol": "admin",
+      "accion": "VENTA",
+      "detalle": "VTA-000001 $3.200,00 - Efectivo"
+    },
+    {
+      "fecha": "2026-06-30T00:55:04.490Z",
+      "usuario": "admin",
+      "rol": "admin",
+      "accion": "LOGIN",
+      "detalle": "Inicio de sesión"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+PetroPOS Demo
+
+
+--------------------------------
+Ticket: VTA-000001
+Fecha: 29/6/2026, 10:30:27
+Vendedor: admin
+--------------------------------
+pepsi x1  $1100.00
+--------------------------------
+TOTAL: $1100.00
+Pago: Efectivo
+Gracias por su compra
