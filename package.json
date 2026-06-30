@@ -1,1 +1,1 @@
-{"name":"petropos","version":"0.5.0","description":"PetroPOS - Sistema de Gestion Comercial","main":"main.js","scripts":{"start":"electron ."},"author":"PetroPOS","license":"UNLICENSED","devDependencies":{}}
+{"name":"petropos","version":"0.5.0","description":"PetroPOS - Sistema de Gestion Comercial","main":"main.js","scripts":{"start":"electron ."},"author":"PetroPOS","license":"UNLICENSED","devDependencies":{"electron":"^31.7.7"}}
