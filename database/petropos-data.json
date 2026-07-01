@@ -9,7 +9,13 @@
     "email": "",
     "iva": "Responsable Monotributo",
     "ticketMm": "80",
-    "impresora": "Windows / TXT"
+    "impresora": "Windows / TXT",
+    "ticketLeyenda": "Gracias por su compra",
+    "ticketAutoOpen": true,
+    "lectorModo": "USB teclado",
+    "pointTerminal": "No configurado",
+    "puntoVenta": "Caja 1",
+    "abrirCajon": false
   },
   "usuarios": [
     {
@@ -34,7 +40,7 @@
     "saldoInicial": 100,
     "movimientos": [
       {
-        "fecha": "2026-06-30T03:28:00.694Z",
+        "fecha": "2026-06-30T23:41:18.286Z",
         "tipo": "VENTA",
         "detalle": "VTA-000003",
         "monto": 1100,
@@ -42,7 +48,7 @@
         "usuario": "admin"
       },
       {
-        "fecha": "2026-06-30T03:27:48.230Z",
+        "fecha": "2026-06-30T22:31:03.005Z",
         "tipo": "VENTA",
         "detalle": "VTA-000002",
         "monto": 1100,
@@ -147,11 +153,12 @@
   ],
   "ventas": [
     {
-      "id": 1782790080694,
+      "id": 1782862878286,
       "numero": "VTA-000003",
-      "fecha": "2026-06-30T03:28:00.694Z",
+      "fecha": "2026-06-30T23:41:18.286Z",
       "usuario": "admin",
       "cliente": 1,
+      "clienteNombre": "Consumidor Final",
       "pago": "Efectivo",
       "descuento": 0,
       "recibido": 0,
@@ -169,11 +176,12 @@
       "total": 1100
     },
     {
-      "id": 1782790068230,
+      "id": 1782858663005,
       "numero": "VTA-000002",
-      "fecha": "2026-06-30T03:27:48.230Z",
+      "fecha": "2026-06-30T22:31:03.005Z",
       "usuario": "admin",
       "cliente": 1,
+      "clienteNombre": "Consumidor Final",
       "pago": "Efectivo",
       "descuento": 0,
       "recibido": 0,
@@ -188,7 +196,8 @@
           "cantidad": 1
         }
       ],
-      "total": 1100
+      "total": 1100,
+      "anulada": false
     },
     {
       "id": 1782783027686,
@@ -205,12 +214,13 @@
           "cantidad": 1
         }
       ],
-      "total": 1100
+      "total": 1100,
+      "anulada": false
     }
   ],
   "auditoria": [
     {
-      "fecha": "2026-06-30T03:28:00.695Z",
+      "fecha": "2026-06-30T23:41:18.287Z",
       "usuario": "admin",
       "rol": "ADMIN",
       "pc": "DESKTOP-VCTG82R",
@@ -218,7 +228,7 @@
       "detalle": "VTA-000003 $ 1.100,00"
     },
     {
-      "fecha": "2026-06-30T03:27:48.231Z",
+      "fecha": "2026-06-30T22:31:03.006Z",
       "usuario": "admin",
       "rol": "ADMIN",
       "pc": "DESKTOP-VCTG82R",
@@ -269,7 +279,7 @@
   "compras": [],
   "stockMovimientos": [
     {
-      "fecha": "2026-06-30T03:28:00.694Z",
+      "fecha": "2026-06-30T23:41:18.286Z",
       "productoId": 1782782964374,
       "producto": "pepsi",
       "tipo": "VENTA",
@@ -278,7 +288,7 @@
       "usuario": "admin"
     },
     {
-      "fecha": "2026-06-30T03:27:48.230Z",
+      "fecha": "2026-06-30T22:31:03.005Z",
       "productoId": 1782782964374,
       "producto": "pepsi",
       "tipo": "VENTA",
@@ -288,5 +298,6 @@
     }
   ],
   "gastos": [],
-  "ventaTemporal": null
+  "ventaTemporal": null,
+  "devoluciones": []
 }

@@ -1,1 +1,3 @@
-PetroPOS Professional 1.0 RC Build 006
+PetroPOS Professional
+Version 1.0 RC
+Build 010

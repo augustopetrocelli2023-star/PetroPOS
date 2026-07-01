@@ -1,7 +1,7 @@
 {
   "name": "petropos",
-  "version": "1.0.0-rc-build006",
-  "description": "PetroPOS Professional - Sistema de Gestion Comercial - Build 005",
+  "version": "1.0.0-rc-build010",
+  "description": "PetroPOS Professional - Sistema de Gestion Comercial - Build 010",
   "main": "main.js",
   "scripts": {
     "start": "npx electron .",

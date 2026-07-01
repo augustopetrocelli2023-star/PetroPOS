@@ -9,14 +9,14 @@ const BACKUP_DIR = path.join(DATA_DIR,'backups');
 const TICKET_DIR = path.join(ROOT,'tickets');
 const LOG_DIR = path.join(ROOT,'logs');
 const DB_FILE = path.join(DATA_DIR,'petropos-data.json');
-const VERSION = '1.0 RC Build 004';
+const VERSION = '1.0 RC Build 010';
 
 function ensureDirs(){ [DATA_DIR,BACKUP_DIR,TICKET_DIR,LOG_DIR,path.join(ROOT,'config')].forEach(d=>{ if(!fs.existsSync(d)) fs.mkdirSync(d,{recursive:true}); }); }
 function now(){ return new Date().toISOString(); }
 function today(){ return new Date().toISOString().slice(0,10); }
 function seed(){ return {
   version: VERSION,
-  negocio:{nombre:'PetroPOS Professional', razonSocial:'', cuit:'', direccion:'', telefono:'', email:'', iva:'Responsable Monotributo', ticketMm:'80', impresora:'Windows / TXT'},
+  negocio:{nombre:'PetroPOS Professional', razonSocial:'', cuit:'', direccion:'', telefono:'', email:'', iva:'Responsable Monotributo', ticketMm:'80', impresora:'Windows / TXT', ticketLeyenda:'Gracias por su compra', ticketAutoOpen:true, logo:'', puntoVenta:'Caja 1', lectorModo:'USB teclado', pointTerminal:'No configurado', abrirCajon:false},
   usuarios:[{id:1,usuario:'admin',clave:'admin123',nombre:'Administrador',rol:'ADMIN'},{id:2,usuario:'vendedor',clave:'venta123',nombre:'Vendedor',rol:'VENDEDOR'}],
   caja:{abierta:false,fecha:null,usuario:null,saldoInicial:0,movimientos:[]},
   categorias:['General','Bebidas','Almacén','Limpieza','Ferretería'],
@@ -40,4 +40,52 @@ app.on('window-all-closed',()=>{ if(process.platform!=='darwin') app.quit(); });
 ipcMain.handle('db:get',()=>load());
 ipcMain.handle('db:save',(e,db,user,accion,detalle)=>{ audit(db,user,accion,detalle); save(db); return load(); });
 ipcMain.handle('backup:create',()=>backup());
-ipcMain.handle('ticket:create',(e,venta,negocio)=>{ const nro = venta.numero; const file = path.join(TICKET_DIR,`${nro}.txt`); const lines=[]; lines.push(negocio.nombre||'PetroPOS'); lines.push(negocio.razonSocial||''); lines.push(negocio.direccion||''); lines.push('--------------------------------'); lines.push(`Ticket: ${nro}`); lines.push(`Fecha: ${new Date(venta.fecha).toLocaleString('es-AR')}`); lines.push(`Vendedor: ${venta.usuario}`); lines.push('--------------------------------'); venta.items.forEach(i=>lines.push(`${i.descripcion} x${i.cantidad}  $${(i.precio*i.cantidad).toFixed(2)}`)); lines.push('--------------------------------'); if (venta.descuento) lines.push(`Descuento: $${Number(venta.descuento).toFixed(2)}`); lines.push(`TOTAL: $${venta.total.toFixed(2)}`); lines.push(`Pago: ${venta.pago}`); if (venta.recibido) lines.push(`Recibido: $${Number(venta.recibido).toFixed(2)}`); if (venta.vuelto) lines.push(`Vuelto: $${Number(venta.vuelto).toFixed(2)}`); lines.push('Gracias por su compra'); fs.writeFileSync(file,lines.join('\n'),'utf8'); shell.openPath(file); return file; });
+ipcMain.handle('ticket:create',(e,venta,negocio)=>{
+  const nro = venta.numero;
+  const file = path.join(TICKET_DIR,`${nro}.txt`);
+  const width = String(negocio.ticketMm || '80') === '58' ? 32 : 42;
+  const sep = '-'.repeat(width);
+  const center = (t='') => String(t).slice(0,width).padStart(Math.floor((width+String(t).length)/2)).padEnd(width);
+  const moneyLine = (label, value) => `${String(label).padEnd(width-14).slice(0,width-14)}$${Number(value||0).toFixed(2).padStart(13)}`;
+  const lines=[];
+  lines.push(center(negocio.nombre||'PetroPOS Professional'));
+  if(negocio.razonSocial) lines.push(center(negocio.razonSocial));
+  if(negocio.cuit) lines.push(center('CUIT: '+negocio.cuit));
+  if(negocio.iva) lines.push(center(negocio.iva));
+  if(negocio.direccion) lines.push(center(negocio.direccion));
+  if(negocio.telefono) lines.push(center('Tel: '+negocio.telefono));
+  lines.push(sep);
+  lines.push(`Ticket: ${nro}`);
+  if (venta.anulada) lines.push(center('*** TICKET ANULADO ***'));
+  if (venta.devolucion) lines.push(center('*** CON DEVOLUCION ***'));
+  lines.push(`Fecha : ${new Date(venta.fecha).toLocaleString('es-AR')}`);
+  lines.push(`Caja  : Local`);
+  lines.push(`Cajero: ${venta.usuario}`);
+  if(venta.clienteNombre) lines.push(`Cliente: ${venta.clienteNombre}`);
+  lines.push(sep);
+  venta.items.forEach(i=>{
+    lines.push(String(i.descripcion).slice(0,width));
+    lines.push(`${String(i.cantidad).padStart(3)} x $${Number(i.precio||0).toFixed(2).padStart(10)} = $${Number(i.precio*i.cantidad||0).toFixed(2).padStart(10)}`);
+  });
+  lines.push(sep);
+  const subtotal = venta.items.reduce((a,i)=>a+Number(i.precio||0)*Number(i.cantidad||0),0);
+  lines.push(moneyLine('Subtotal', subtotal));
+  if (venta.descuento) lines.push(moneyLine('Descuento', -Number(venta.descuento||0)));
+  lines.push(moneyLine('TOTAL', venta.total));
+  lines.push(`Pago: ${venta.pago}`);
+  if (venta.recibido) lines.push(moneyLine('Recibido', venta.recibido));
+  if (venta.vuelto) lines.push(moneyLine('Vuelto', venta.vuelto));
+  lines.push(sep);
+  lines.push(center(negocio.ticketLeyenda || 'Gracias por su compra'));
+  lines.push(center('PetroPOS Professional'));
+  fs.writeFileSync(file,lines.join('\n'),'utf8');
+  if (negocio.ticketAutoOpen !== false) shell.openPath(file);
+  return file;
+});
+
+ipcMain.handle('system:printers', async () => {
+  const wins = BrowserWindow.getAllWindows();
+  if (!wins.length) return [];
+  try { return await wins[0].webContents.getPrintersAsync(); }
+  catch (err) { return [{ name: 'No se pudieron leer impresoras', description: String(err.message || err) }]; }
+});

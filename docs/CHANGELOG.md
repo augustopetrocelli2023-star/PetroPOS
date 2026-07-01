@@ -1,3 +1,9 @@
+# Build 009
+- Caja con arqueo.
+- Reportes con filtros.
+- Configuración de hardware/ticket.
+- Centro técnico ampliado.
+
 # Changelog
 
 ## v0.5.0 Pro Piloto
