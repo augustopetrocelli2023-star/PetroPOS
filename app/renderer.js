@@ -40,27 +40,47 @@ function normalizeDB(input) {
   d.negocio.puntoVenta = d.negocio.puntoVenta || 'Caja 1';
   if (d.negocio.abrirCajon === undefined) d.negocio.abrirCajon = false;
   d.usuarios = Array.isArray(d.usuarios) ? d.usuarios : [];
-  d.productos = Array.isArray(d.productos) ? d.productos : [];
+  d.productos = Array.isArray(d.productos) ? d.productos : (Array.isArray(d.products) ? d.products : []);
+  d.products = d.productos;
   d.clientes = Array.isArray(d.clientes) ? d.clientes : [{ id: 1, nombre: 'Consumidor Final', activo: true }];
   d.proveedores = Array.isArray(d.proveedores) ? d.proveedores : [];
   d.categorias = Array.isArray(d.categorias) ? d.categorias : ['General'];
   d.marcas = Array.isArray(d.marcas) ? d.marcas : ['Sin marca'];
-  d.ventas = Array.isArray(d.ventas) ? d.ventas : [];
+  d.ventas = Array.isArray(d.ventas) ? d.ventas : (Array.isArray(d.sales) ? d.sales : []);
+  d.sales = d.ventas;
   d.devoluciones = Array.isArray(d.devoluciones) ? d.devoluciones : [];
   d.compras = Array.isArray(d.compras) ? d.compras : [];
   d.stockMovimientos = Array.isArray(d.stockMovimientos) ? d.stockMovimientos : [];
   d.gastos = Array.isArray(d.gastos) ? d.gastos : [];
-  d.auditoria = Array.isArray(d.auditoria) ? d.auditoria : [];
+  d.auditoria = Array.isArray(d.auditoria) ? d.auditoria : (Array.isArray(d.audits) ? d.audits : []);
+  d.audits = d.auditoria;
   d.caja = d.caja || { abierta: false, movimientos: [], saldoInicial: 0 };
   d.caja.movimientos = Array.isArray(d.caja.movimientos) ? d.caja.movimientos : [];
   d.ventaTemporal = d.ventaTemporal || null;
   d.ventas.forEach(v => { if (v.anulada === undefined) v.anulada = false; });
   d.productos.forEach(p => {
-    p.stock = Number(p.stock || 0);
-    p.minimo = Number(p.minimo || 0);
-    p.precio = Number(p.precio || 0);
+    p.codigoInterno = p.codigoInterno || p.codigo || '';
+    p.codigoBarras = p.codigoBarras || p.barra || '';
+    p.codigo = p.codigo || p.codigoInterno || '';
+    p.barra = p.barra || p.codigoBarras || '';
+    p.descripcion = p.descripcion || '';
+    p.marca = p.marca || '';
+    p.rubro = p.rubro || '';
+    p.categoria = p.categoria || '';
+    p.proveedor = p.proveedor || '';
+    p.unidad = p.unidad || '';
     p.costo = Number(p.costo || 0);
-    if (p.activo === undefined) p.activo = true;
+    p.precio = Number(p.precio || 0);
+    p.iva = Number(p.iva || 0);
+    p.stock = Number(p.stock || 0);
+    p.stockMinimo = Number(p.stockMinimo || p.minimo || 0);
+    p.stockIdeal = Number(p.stockIdeal || 0);
+    p.ubicacion = p.ubicacion || '';
+    p.imagen = p.imagen || '';
+    p.activo = p.activo === false ? false : true;
+    p.priceHistory = Array.isArray(p.priceHistory) ? p.priceHistory : [];
+    p.createdAt = p.createdAt || new Date().toISOString();
+    p.updatedAt = p.updatedAt || new Date().toISOString();
   });
   return d;
 }
@@ -197,33 +217,53 @@ function productos() {
 
 function renderProductTable() {
   const q = ($('#qProd')?.value || '').toLowerCase();
-  const rows = db.productos.filter(p => [p.codigo, p.barra, p.descripcion, p.marca, p.categoria, p.proveedor].join(' ').toLowerCase().includes(q));
-  $('#productTable').innerHTML = `<table class="table"><tr><th>Código</th><th>Barra</th><th>Descripción</th><th>Marca</th><th>Categoría</th><th>Costo</th><th>Precio</th><th>Margen</th><th>Stock</th><th>Acciones</th></tr>${rows.map(p => `<tr><td>${esc(p.codigo)}</td><td>${esc(p.barra || '')}</td><td>${esc(p.descripcion)}</td><td>${esc(p.marca || '')}</td><td>${esc(p.categoria || '')}</td><td>${money(p.costo)}</td><td>${money(p.precio)}</td><td>${Number(p.costo) ? Math.round(((p.precio - p.costo) / p.costo) * 100) : 0}%</td><td><span class="pill ${p.stock <= p.minimo ? 'low' : 'okpill'}">${p.stock}</span></td><td><button class="secondary" onclick="editProduct(${p.id})">Editar</button> <button class="secondary" onclick="duplicateProduct(${p.id})">Duplicar</button> <button class="danger" onclick="deleteProduct(${p.id})">Eliminar</button></td></tr>`).join('')}</table>`;
+  const rows = db.productos.filter(p => [p.codigoInterno || p.codigo, p.codigoBarras || p.barra, p.descripcion, p.marca, p.categoria, p.proveedor].join(' ').toLowerCase().includes(q));
+  $('#productTable').innerHTML = `<table class="table"><tr><th>Código</th><th>Barra</th><th>Descripción</th><th>Marca</th><th>Categoría</th><th>Costo</th><th>Precio</th><th>Margen</th><th>Stock</th><th>Acciones</th></tr>${rows.map(p => `<tr><td>${esc(p.codigoInterno || p.codigo)}</td><td>${esc(p.codigoBarras || p.barra || '')}</td><td>${esc(p.descripcion)}</td><td>${esc(p.marca || '')}</td><td>${esc(p.categoria || '')}</td><td>${money(p.costo)}</td><td>${money(p.precio)}</td><td>${Number(p.costo) ? Math.round(((p.precio - p.costo) / p.costo) * 100) : 0}%</td><td><span class="pill ${p.stock <= (p.stockMinimo || p.minimo || 0) ? 'low' : 'okpill'}">${p.stock}</span></td><td><button class="secondary" onclick="editProduct(${p.id})">Editar</button> <button class="secondary" onclick="duplicateProduct(${p.id})">Duplicar</button> <button class="danger" onclick="deleteProduct(${p.id})">Eliminar</button></td></tr>`).join('')}</table>`;
 }
 
 function productForm(p = {}) {
   const cats = db.categorias || ['General'];
   const marks = db.marcas || ['Sin marca'];
   const prov = db.proveedores.map(x => x.nombre);
-  return `<div class="panel"><h2>${p.id ? 'Editar' : 'Nuevo'} producto</h2><div class="form"><div><label>Código</label><input id="f_codigo" value="${esc(p.codigo || nextCode())}"></div><div><label>Código de barras</label><input id="f_barra" value="${esc(p.barra || '')}"></div><div class="wide"><label>Descripción</label><input id="f_desc" value="${esc(p.descripcion || '')}"></div><div><label>Marca</label><select id="f_marca">${marks.map(x => `<option ${x == p.marca ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div><div><label>Categoría</label><select id="f_cat">${cats.map(x => `<option ${x == p.categoria ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div><div><label>Proveedor</label><select id="f_prov">${prov.map(x => `<option ${x == p.proveedor ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div><div><label>Costo</label><input id="f_costo" type="number" step="0.01" value="${p.costo || 0}"></div><div><label>Precio venta</label><input id="f_precio" type="number" step="0.01" value="${p.precio || 0}"></div><div><label>IVA %</label><input id="f_iva" type="number" value="${p.iva ?? 21}"></div><div><label>Stock</label><input id="f_stock" type="number" value="${p.stock || 0}"></div><div><label>Stock mínimo</label><input id="f_min" type="number" value="${p.minimo || 0}"></div><div><label>Imagen / ruta</label><input id="f_img" value="${esc(p.imagen || '')}"></div><div class="full toolbar"><button onclick="saveProduct()">Guardar</button><button class="secondary" onclick="cancelProduct()">Cancelar</button></div></div></div>`;
+  return `<div class="panel"><h2>${p.id ? 'Editar' : 'Nuevo'} producto</h2><div class="form"><div><label>Código interno</label><input id="f_codigoInterno" value="${esc(p.codigoInterno || p.codigo || nextCode())}"></div><div><label>Código de barras</label><input id="f_codigoBarras" value="${esc(p.codigoBarras || p.barra || '')}"></div><div class="wide"><label>Descripción</label><input id="f_descripcion" value="${esc(p.descripcion || '')}"></div><div><label>Marca</label><select id="f_marca">${marks.map(x => `<option ${x == p.marca ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div><div><label>Categoría</label><select id="f_categoria">${cats.map(x => `<option ${x == p.categoria ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div><div><label>Proveedor</label><select id="f_proveedor">${prov.map(x => `<option ${x == p.proveedor ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></div><div><label>Unidad</label><input id="f_unidad" value="${esc(p.unidad || '')}"></div><div><label>Costo</label><input id="f_costo" type="number" step="0.01" value="${p.costo || 0}"></div><div><label>Precio venta</label><input id="f_precio" type="number" step="0.01" value="${p.precio || 0}"></div><div><label>IVA %</label><input id="f_iva" type="number" value="${p.iva ?? 21}"></div><div><label>Stock</label><input id="f_stock" type="number" value="${p.stock || 0}"></div><div><label>Stock mínimo</label><input id="f_stockMinimo" type="number" value="${p.stockMinimo || p.minimo || 0}"></div><div><label>Stock ideal</label><input id="f_stockIdeal" type="number" value="${p.stockIdeal || 0}"></div><div><label>Ubicación</label><input id="f_ubicacion" value="${esc(p.ubicacion || '')}"></div><div><label>Imagen / ruta</label><input id="f_imagen" value="${esc(p.imagen || '')}"></div>${p.priceHistory && p.priceHistory.length ? `<div class="full"><h3>Historial de precios</h3>${p.priceHistory.slice(0,5).map(h=>`<div class="history-item">${esc(h.fecha)} · Costo $${money(h.costo || p.costo)} · Precio $${money(h.precioNuevo || h.precio || p.precio)}</div>`).join('')}</div>` : ''}<div class="full toolbar"><button onclick="saveProduct()">Guardar</button><button class="secondary" onclick="cancelProduct()">Cancelar</button></div></div></div>`;
 }
 
 function nextCode() { return 'P' + String((Math.max(0, ...db.productos.map(p => Number(p.id) || 0)) + 1)).padStart(6, '0'); }
 window.newProduct = () => { editingProduct = null; $('#productForm').innerHTML = productForm({}); };
 window.editProduct = id => { editingProduct = db.productos.find(p => p.id === id); $('#productForm').innerHTML = productForm(editingProduct); };
-window.duplicateProduct = id => { const p = { ...db.productos.find(x => x.id === id), id: null, codigo: nextCode(), barra: '', descripcion: (db.productos.find(x => x.id === id)?.descripcion || '') + ' copia' }; editingProduct = null; $('#productForm').innerHTML = productForm(p); };
+window.duplicateProduct = id => { const source = db.productos.find(x => x.id === id) || {}; const p = { ...source, id: null, codigoInterno: nextCode(), codigoBarras: '', descripcion: (source.descripcion || '') + ' copia' }; editingProduct = null; $('#productForm').innerHTML = productForm(p); };
 window.cancelProduct = () => { $('#productForm').innerHTML = ''; };
 window.saveProduct = async () => {
-  const p = { id: editingProduct?.id || Date.now(), codigo: $('#f_codigo').value.trim(), barra: $('#f_barra').value.trim(), descripcion: $('#f_desc').value.trim(), marca: $('#f_marca').value, categoria: $('#f_cat').value, proveedor: $('#f_prov').value, costo: +$('#f_costo').value, precio: +$('#f_precio').value, iva: +$('#f_iva').value, stock: +$('#f_stock').value, minimo: +$('#f_min').value, imagen: $('#f_img').value.trim(), activo: true, createdAt: editingProduct?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
-  if (!p.codigo) return alert('Falta código interno');
+  const p = {
+    id: editingProduct?.id || Date.now(),
+    codigoInterno: $('#f_codigoInterno').value.trim(),
+    codigoBarras: $('#f_codigoBarras').value.trim(),
+    descripcion: $('#f_descripcion').value.trim(),
+    marca: $('#f_marca').value,
+    categoria: $('#f_categoria').value,
+    proveedor: $('#f_proveedor').value,
+    unidad: $('#f_unidad').value.trim(),
+    costo: +$('#f_costo').value,
+    precio: +$('#f_precio').value,
+    iva: +$('#f_iva').value,
+    stock: +$('#f_stock').value,
+    stockMinimo: +$('#f_stockMinimo').value,
+    stockIdeal: +$('#f_stockIdeal').value,
+    ubicacion: $('#f_ubicacion').value.trim(),
+    imagen: $('#f_imagen').value.trim(),
+    activo: true,
+    createdAt: editingProduct?.createdAt || new Date().toISOString()
+  };
+  if (!p.codigoInterno) return alert('Falta código interno');
   if (!p.descripcion) return alert('Falta descripción');
-  if (db.productos.some(x => x.id !== p.id && String(x.codigo).toLowerCase() === p.codigo.toLowerCase())) return alert('Ya existe un producto con ese código interno');
-  if (p.barra && db.productos.some(x => x.id !== p.id && String(x.barra).toLowerCase() === p.barra.toLowerCase())) return alert('Ya existe un producto con ese código de barras');
-  const i = db.productos.findIndex(x => x.id === p.id);
-  if (i >= 0) db.productos[i] = p; else db.productos.unshift(p);
-  await persist('PRODUCTO_GUARDADO', p.descripcion);
+  if (db.productos.some(x => x.id !== p.id && String(x.codigoInterno || x.codigo).toLowerCase() === p.codigoInterno.toLowerCase())) return alert('Ya existe un producto con ese código interno');
+  if (p.codigoBarras && db.productos.some(x => x.id !== p.id && String(x.codigoBarras || x.barra).toLowerCase() === p.codigoBarras.toLowerCase())) return alert('Ya existe un producto con ese código de barras');
+  await api.saveProduct({ product: p, user });
+  const products = await api.getProducts(); if (Array.isArray(products)) db.productos = products;
+  $('#productForm').innerHTML = '';
+  render();
 };
-window.deleteProduct = async id => { if (!confirm('¿Eliminar producto?')) return; const p = db.productos.find(x => x.id === id); db.productos = db.productos.filter(x => x.id !== id); await persist('PRODUCTO_ELIMINADO', p?.descripcion || id); };
+window.deleteProduct = async id => { if (!confirm('¿Eliminar producto?')) return; await api.deleteProduct({ id, user }); const products = await api.getProducts(); if (Array.isArray(products)) db.productos = products; render(); };
 window.manageLists = async () => {
   const cats = prompt('Categorías separadas por coma', db.categorias.join(', '));
   if (cats !== null) db.categorias = cats.split(',').map(x => x.trim()).filter(Boolean);
@@ -248,11 +288,11 @@ window.addScan = () => {
   if (saleBusy) return;
   const val = $('#scan').value.trim().toLowerCase();
   if (!val) return;
-  const p = db.productos.find(x => String(x.codigo || '').toLowerCase() === val || String(x.barra || '').toLowerCase() === val) || db.productos.find(x => String(x.descripcion || '').toLowerCase().includes(val));
+  const p = db.productos.find(x => String(x.codigoInterno || x.codigo || '').toLowerCase() === val || String(x.codigoBarras || x.barra || '').toLowerCase() === val) || db.productos.find(x => String(x.descripcion || '').toLowerCase().includes(val));
   if (!p) return alert('Producto no encontrado');
   if (p.activo === false) return alert('Producto inactivo');
   const ex = cart.find(i => i.id === p.id);
-  if (ex) ex.cantidad++; else cart.push({ id: p.id, codigo: p.codigo, descripcion: p.descripcion, costo: Number(p.costo || 0), precio: Number(p.precio || 0), cantidad: 1 });
+  if (ex) ex.cantidad++; else cart.push({ id: p.id, codigo: p.codigoInterno || p.codigo, descripcion: p.descripcion, costo: Number(p.costo || 0), precio: Number(p.precio || 0), cantidad: 1 });
   $('#scan').value = '';
   saveDraft(false);
   render();

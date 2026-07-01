@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const repo = require('../../repositories/jsonRepository');
 const service = require('../../services/businessService');
+const productService = require('../../services/productService');
 
 const ROOT = path.join(__dirname, '..', '..');
 const DATA_DIR = path.join(ROOT, 'data');
@@ -41,6 +42,8 @@ app.on('window-all-closed',()=>{ if(process.platform!=='darwin') app.quit(); });
 
 ipcMain.handle('login', (e, d)=> service.login(d));
 ipcMain.handle('getState', ()=> service.getState());
+ipcMain.handle('getProducts', ()=> productService.getProducts());
+ipcMain.handle('searchProducts', (e,term)=> productService.searchProducts(term));
 ipcMain.handle('saveBusiness',(e,d)=> service.saveBusiness(d));
 ipcMain.handle('saveProduct',(e,d)=> service.saveProduct(d));
 ipcMain.handle('deleteProduct',(e,d)=> service.deleteProduct(d));

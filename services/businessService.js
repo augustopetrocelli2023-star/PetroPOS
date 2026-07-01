@@ -1,5 +1,6 @@
 const repo = require('../repositories/jsonRepository');
 const path = require('path');
+const productService = require('./productService');
 
 function money(n){return Number(n||0).toFixed(2);} 
 
@@ -7,12 +8,12 @@ function audit(db,user,accion,detalle){ db.audits = db.audits || []; db.audits.u
 
 async function login({usuario,clave}){ const db=repo.load(); const u=db.users.find(x=>x.usuario===usuario && x.clave===clave && x.activo); if(!u) return {ok:false,msg:'Usuario o clave incorrectos'}; audit(db,u,'LOGIN','Inicio de sesión'); repo.save(db); return {ok:true,user:{id:u.id,usuario:u.usuario,nombre:u.nombre,rol:u.rol}, business:db.negocio}; }
 
-async function getState(){ const db=repo.load(); const today=new Date().toISOString().slice(0,10); const ventasHoy=(db.sales||[]).filter(s=>s.fecha.slice(0,10)===today); return { business:db.negocio, categories:db.categories||[], brands:db.brands||[], suppliers:db.suppliers||[], products:db.products||[], sales:(db.sales||[]).slice(0,20), audits:(db.audits||[]).slice(0,50), dashboard:{ productos:(db.products||[]).length, stockBajo:(db.products||[]).filter(p=>p.activo && Number(p.stock)<=Number(p.stockMin)).length, ventasHoy:ventasHoy.length, facturadoHoy:ventasHoy.reduce((a,s)=>a+s.total,0), ultimaVenta:db.sales?.[0]?.numero||'--' } };
+async function getState(){ const db=repo.load(); const today=new Date().toISOString().slice(0,10); const ventasHoy=(db.sales||[]).filter(s=>s.fecha.slice(0,10)===today); const products = productService.getProducts(); return { business:db.negocio, categories:db.categories||[], brands:db.brands||[], suppliers:db.suppliers||[], products, sales:(db.sales||[]).slice(0,20), audits:(db.audits||[]).slice(0,50), dashboard:{ productos:products.length, stockBajo:products.filter(p=>p.activo && Number(p.stock)<=Number(p.stockMinimo)).length, ventasHoy:ventasHoy.length, facturadoHoy:ventasHoy.reduce((a,s)=>a+s.total,0), ultimaVenta:db.sales?.[0]?.numero||'--' } };
 }
 
-async function saveProduct({product,user}){ const db=repo.load(); db.products = db.products || []; if(product.id){ const i=db.products.findIndex(p=>p.id===product.id); if(i>=0){ db.products[i]=Object.assign(db.products[i],product); } else { product.id = Date.now(); db.products.push(product); } } else { product.id = Date.now(); db.products.push(product); } audit(db,user,'PRODUCT_SAVE',product.descripcion||product.code||''); repo.save(db); return {ok:true,product}; }
+async function saveProduct({product,user}){ const saved = productService.saveProduct({product,user}); return {ok:true,product:saved}; }
 
-async function deleteProduct({id,user}){ const db=repo.load(); db.products = db.products || []; const idx=db.products.findIndex(p=>p.id===id); if(idx>=0){ db.products.splice(idx,1); audit(db,user,'PRODUCT_DELETE',`id:${id}`); repo.save(db); return {ok:true}; } return {ok:false,msg:'Producto no encontrado'}; }
+async function deleteProduct({id,user}){ const removed = productService.deleteProduct({id,user}); if(!removed) return {ok:false,msg:'Producto no encontrado'}; return {ok:true}; }
 
 async function newSale({items,payment,user}){ const db=repo.load(); db.sales = db.sales || []; const sale = { id: Date.now(), numero: (db.sales.length?('VTA-'+String(db.sales.length+1).padStart(6,'0')):('VTA-000001')), fecha:new Date().toISOString(), usuario:user.usuario||user.id||'user', items, payment, total: items.reduce((a,i)=>a+(i.precio*i.cantidad),0) }; db.sales.unshift(sale); audit(db,user,'SALE',`Venta ${sale.numero}`); repo.save(db); return {ok:true,sale}; }
 

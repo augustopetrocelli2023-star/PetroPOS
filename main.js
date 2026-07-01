@@ -4,6 +4,7 @@ const path = require('path');
 const os = require('os');
 const repo = require('./repositories/jsonRepository');
 const service = require('./services/businessService');
+const productService = require('./services/productService');
 
 const ROOT = __dirname;
 const VERSION = '1.0 RC Build 010';
@@ -47,6 +48,10 @@ app.on('window-all-closed',()=>{ if(process.platform!=='darwin') app.quit(); });
 
 ipcMain.handle('db:get',()=>load());
 ipcMain.handle('db:save',(e,db,user,accion,detalle)=>{ audit(db,user,accion,detalle); save(db); return load(); });
+ipcMain.handle('getProducts',()=>productService.getProducts());
+ipcMain.handle('searchProducts',(e,term)=>productService.searchProducts(term));
+ipcMain.handle('saveProduct',(e,payload)=>service.saveProduct(payload));
+ipcMain.handle('deleteProduct',(e,payload)=>service.deleteProduct(payload));
 ipcMain.handle('backup:create',()=>backup());
 ipcMain.handle('ticket:create',async(e,venta,negocio)=>{
   // delegate to service to build and write ticket
