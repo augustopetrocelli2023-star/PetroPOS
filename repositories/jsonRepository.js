@@ -12,6 +12,8 @@ function ensureDirs(){ [DATA_DIR,BACKUP_DIR,TICKETS_DIR].forEach(d=>{ if(!fs.exi
 function seed(){ return {
   negocio:{nombre:'PetroPOS Professional', razonSocial:'', cuit:'', direccion:'', telefono:'', email:'', iva:'Responsable Monotributo', ticketMm:'80', impresora:'Windows / TXT', ticketLeyenda:'Gracias por su compra', ticketAutoOpen:true, logo:'', puntoVenta:'Caja 1', lectorModo:'USB teclado', pointTerminal:'No configurado', abrirCajon:false},
   users:[{id:1,usuario:'admin',clave:'admin123',nombre:'Administrador',rol:'admin',activo:true},{id:2,usuario:'vendedor',clave:'venta123',nombre:'Vendedor',rol:'vendedor',activo:true}],
+  clientes:[{id:1,nombre:'Consumidor Final',apellido:'',razonSocial:'',dni:'',cuit:'',condicionIva:'',telefono:'',email:'',domicilio:'',localidad:'',provincia:'',descuento:0,limiteCredito:0,saldoCuentaCorriente:0,observaciones:'',activo:true,historialCompras:[]}],
+  clients:[{id:1,nombre:'Consumidor Final',apellido:'',razonSocial:'',dni:'',cuit:'',condicionIva:'',telefono:'',email:'',domicilio:'',localidad:'',provincia:'',descuento:0,limiteCredito:0,saldoCuentaCorriente:0,observaciones:'',activo:true,historialCompras:[]}],
   productos:[],
   products:[],
   ventas:[],
@@ -27,6 +29,8 @@ function normalizeLegacy(db){
   if (Array.isArray(db.ventas) && !Array.isArray(db.sales)) db.sales = db.ventas;
   if (Array.isArray(db.audits) && !Array.isArray(db.auditoria)) db.auditoria = db.audits;
   if (Array.isArray(db.auditoria) && !Array.isArray(db.audits)) db.audits = db.auditoria;
+  if (Array.isArray(db.clients) && !Array.isArray(db.clientes)) db.clientes = db.clients;
+  if (Array.isArray(db.clientes) && !Array.isArray(db.clients)) db.clients = db.clientes;
   return db;
 }
 

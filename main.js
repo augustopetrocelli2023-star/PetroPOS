@@ -5,6 +5,7 @@ const os = require('os');
 const repo = require('./repositories/jsonRepository');
 const service = require('./services/businessService');
 const productService = require('./services/productService');
+const clientService = require('./services/clientService');
 
 const ROOT = __dirname;
 const VERSION = '1.0 RC Build 010';
@@ -32,8 +33,13 @@ function save(db){ return repo.save(db); }
 function audit(db,user,accion,detalle){ db.auditoria = db.auditoria || []; db.auditoria.unshift({fecha:now(),usuario:user?.usuario||'sistema',rol:user?.rol||'',pc:os.hostname(),accion,detalle}); db.auditoria=db.auditoria.slice(0,1000); return repo.save(db); }
 function backup(){ return repo.backup(); }
 function createWindow(){
-  const win = new BrowserWindow({width:1360,height:820,minWidth:1100,minHeight:700,webPreferences:{preload:path.join(__dirname,'preload.js')}});
+  const win = new BrowserWindow({width:1360,height:820,minWidth:1100,minHeight:700,center:true,show:false,webPreferences:{preload:path.join(__dirname,'preload.js')}});
   win.loadFile(path.join(__dirname,'app','index.html'));
+  win.once('ready-to-show', ()=>{
+    win.center();
+    win.show();
+    win.focus();
+  });
   // DevTools opening removed in production runs
   win.webContents.on('console-message',(e,level,message,line,source)=>{ console.log('RENDERER_CONSOLE',level,message,source + ':' + line); });
   win.webContents.on('did-finish-load', async ()=>{
@@ -48,10 +54,17 @@ app.on('window-all-closed',()=>{ if(process.platform!=='darwin') app.quit(); });
 
 ipcMain.handle('db:get',()=>load());
 ipcMain.handle('db:save',(e,db,user,accion,detalle)=>{ audit(db,user,accion,detalle); save(db); return load(); });
+ipcMain.handle('login', (e, d) => service.login(d));
+ipcMain.handle('getState', () => service.getState());
 ipcMain.handle('getProducts',()=>productService.getProducts());
 ipcMain.handle('searchProducts',(e,term)=>productService.searchProducts(term));
 ipcMain.handle('saveProduct',(e,payload)=>service.saveProduct(payload));
 ipcMain.handle('deleteProduct',(e,payload)=>service.deleteProduct(payload));
+ipcMain.handle('getClients',()=>service.getClients());
+ipcMain.handle('searchClients',(e,term)=>service.searchClients({term}));
+ipcMain.handle('saveClient',(e,payload)=>service.saveClient(payload));
+ipcMain.handle('deleteClient',(e,payload)=>service.deleteClient(payload));
+ipcMain.handle('addClientPurchase',(e,payload)=>service.addClientPurchase(payload));
 ipcMain.handle('backup:create',()=>backup());
 ipcMain.handle('ticket:create',async(e,venta,negocio)=>{
   // delegate to service to build and write ticket

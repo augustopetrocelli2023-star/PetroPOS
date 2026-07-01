@@ -9,6 +9,7 @@ let editingCustomer = null;
 let editingSupplier = null;
 let reportFilter = { from: '', to: '' };
 let printerCache = [];
+let clientsLoaded = false;
 
 const VERSION = '1.0 RC Build 010';
 const $ = s => document.querySelector(s);
@@ -21,10 +22,26 @@ const activeSales = () => db.ventas.filter(v => !v.anulada);
 const lastActiveSale = () => activeSales()[0];
 
 async function init() {
-  db = normalizeDB(await api.getDB());
+  const state = api.getDB ? await api.getDB() : (api.getState ? await api.getState() : null);
+  db = normalizeDB(state);
+  await loadClients();
   restoreDraft();
   renderLogin();
   document.addEventListener('keydown', handleShortcuts);
+}
+
+async function loadClients() {
+  const result = await api.getClients();
+  if (result && result.ok && Array.isArray(result.clients)) {
+    db.clientes = result.clients;
+  } else if (Array.isArray(result)) {
+    db.clientes = result;
+  }
+  db.clientes = Array.isArray(db.clientes) ? db.clientes : [];
+  if (!db.clientes.some(c => Number(c.id) === 1)) {
+    db.clientes.unshift({ id: 1, nombre: 'Consumidor Final', activo: true });
+  }
+  clientsLoaded = true;
 }
 
 function normalizeDB(input) {
@@ -105,15 +122,20 @@ function handleShortcuts(e) {
 
 function renderLogin() {
   $('#app').innerHTML = `<div class="login"><div class="card"><div class="brand">PetroPOS Professional</div><p class="sub">Sistema Integral de Gestión Comercial<br>${VERSION}</p><label>Usuario</label><input id="u" value="admin"><label>Contraseña</label><input id="p" type="password" value="admin123"><div class="toolbar"><button onclick="login()">Ingresar</button></div><p class="muted">Admin: admin/admin123<br>Vendedor: vendedor/venta123</p></div></div>`;
-  $('#p').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  const pass = $('#p');
+  if (pass) pass.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  const userField = $('#u');
+  if (userField) userField.focus();
 }
 
-function login() {
+async function login() {
   const u = $('#u').value.trim();
   const p = $('#p').value;
-  const found = db.usuarios.find(x => x.usuario === u && x.clave === p);
-  if (!found) return alert('Usuario o contraseña incorrectos');
-  user = found;
+  if (!u || !p) return alert('Ingrese usuario y contraseña');
+  const result = await api.login ? await api.login({ usuario: u, clave: p }) : null;
+  if (!result) return alert('No se pudo autenticar.');
+  if (!result.ok) return alert(result.msg || 'Usuario o contraseña incorrectos');
+  user = result.user;
   view = 'dashboard';
   render();
 }
@@ -405,7 +427,7 @@ function clientes() {
   const q = (document.getElementById('qCliente')?.value || '').toLowerCase();
   const rows = db.clientes.filter(c => [c.nombre,c.dni,c.cuit,c.telefono,c.email].join(' ').toLowerCase().includes(q));
   const totalComprasCliente = id => activeSales().filter(v=>Number(v.cliente)===Number(id)).reduce((a,v)=>a+Number(v.total||0),0);
-  return `<h1>Clientes</h1><div class="grid g3"><div class="stat"><h3>Clientes activos</h3><div class="num">${db.clientes.length}</div></div><div class="stat"><h3>Consumidor Final</h3><div class="num">Siempre disponible</div></div><div class="stat"><h3>Ventas con cliente</h3><div class="num">${activeSales().filter(v=>v.cliente && Number(v.cliente)!==1).length}</div></div></div><div class="panel"><h2>${editingCustomer?'Editar cliente':'Nuevo cliente'}</h2><div class="form"><div><label>Nombre / Razón social</label><input id="c_nombre" value="${esc(editingCustomer?.nombre||'')}"></div><div><label>DNI</label><input id="c_dni" value="${esc(editingCustomer?.dni||'')}"></div><div><label>CUIT</label><input id="c_cuit" value="${esc(editingCustomer?.cuit||'')}"></div><div><label>Teléfono</label><input id="c_tel" value="${esc(editingCustomer?.telefono||'')}"></div><div><label>Email</label><input id="c_email" value="${esc(editingCustomer?.email||'')}"></div><div><label>Dirección</label><input id="c_dir" value="${esc(editingCustomer?.direccion||'')}"></div><div><label>Descuento %</label><input id="c_desc" type="number" value="${editingCustomer?.descuento||0}"></div><div><label>Saldo CC</label><input id="c_saldo" type="number" value="${editingCustomer?.saldo||0}"></div><div class="full"><label>Observaciones</label><textarea id="c_obs">${esc(editingCustomer?.observaciones||'')}</textarea></div><div class="full toolbar"><button onclick="saveCustomer()">Guardar cliente</button><button class="secondary" onclick="editingCustomer=null;render()">Limpiar</button><button class="secondary" onclick="setFinalCustomer()">Consumidor Final</button></div></div></div><div class="panel"><div class="toolbar"><input id="qCliente" placeholder="Buscar por nombre, DNI, CUIT o teléfono" value="${esc(q)}" oninput="render()"><button class="secondary" onclick="exportCSV('clientes')">Exportar CSV</button></div><table class="table"><tr><th>Nombre</th><th>DNI/CUIT</th><th>Teléfono</th><th>Email</th><th>Compras</th><th>Total</th><th>Acciones</th></tr>${rows.map(c=>`<tr><td>${esc(c.nombre)}</td><td>${esc(c.dni||c.cuit||'')}</td><td>${esc(c.telefono||'')}</td><td>${esc(c.email||'')}</td><td>${activeSales().filter(v=>Number(v.cliente)===Number(c.id)).length}</td><td>${money(totalComprasCliente(c.id))}</td><td><button class="secondary" onclick="editCustomer(${c.id})">Editar</button> <button class="danger" onclick="deleteCustomer(${c.id})">Eliminar</button></td></tr>`).join('')}</table></div>`;
+  return `<h1>Clientes</h1><div class="grid g3"><div class="stat"><h3>Clientes activos</h3><div class="num">${db.clientes.length}</div></div><div class="stat"><h3>Consumidor Final</h3><div class="num">Siempre disponible</div></div><div class="stat"><h3>Ventas con cliente</h3><div class="num">${activeSales().filter(v=>v.cliente && Number(v.cliente)!==1).length}</div></div></div><div class="panel"><h2>${editingCustomer?'Editar cliente':'Nuevo cliente'}</h2><div class="form"><div><label>Nombre / Razón social</label><input id="c_nombre" value="${esc(editingCustomer?.nombre||'')}"></div><div><label>DNI</label><input id="c_dni" value="${esc(editingCustomer?.dni||'')}"></div><div><label>CUIT</label><input id="c_cuit" value="${esc(editingCustomer?.cuit||'')}"></div><div><label>Teléfono</label><input id="c_tel" value="${esc(editingCustomer?.telefono||'')}"></div><div><label>Email</label><input id="c_email" value="${esc(editingCustomer?.email||'')}"></div><div><label>Dirección</label><input id="c_dir" value="${esc(editingCustomer?.direccion||'')}"></div><div><label>Descuento %</label><input id="c_desc" type="number" value="${editingCustomer?.descuento||0}"></div><div><label>Saldo CC</label><input id="c_saldo" type="number" value="${editingCustomer?.saldo||0}"></div><div class="full"><label>Observaciones</label><textarea id="c_obs">${esc(editingCustomer?.observaciones||'')}</textarea></div><div class="full toolbar"><button onclick="saveCustomer()">Guardar cliente</button><button class="secondary" onclick="editingCustomer=null;render()">Limpiar</button><button class="secondary" onclick="setFinalCustomer()">Consumidor Final</button></div></div></div><div class="panel"><div class="toolbar"><input id="qCliente" placeholder="Buscar por nombre, DNI, CUIT o teléfono" value="${esc(q)}" oninput="performCustomerSearch()"><button class="secondary" onclick="exportCSV('clientes')">Exportar CSV</button></div><table class="table"><tr><th>Nombre</th><th>DNI/CUIT</th><th>Teléfono</th><th>Email</th><th>Compras</th><th>Total</th><th>Acciones</th></tr>${rows.map(c=>`<tr><td>${esc(c.nombre)}</td><td>${esc(c.dni||c.cuit||'')}</td><td>${esc(c.telefono||'')}</td><td>${esc(c.email||'')}</td><td>${activeSales().filter(v=>Number(v.cliente)===Number(c.id)).length}</td><td>${money(totalComprasCliente(c.id))}</td><td><button class="secondary" onclick="editCustomer(${c.id})">Editar</button> <button class="danger" onclick="deleteCustomer(${c.id})">Eliminar</button></td></tr>`).join('')}</table></div>`;
 }
 
 function proveedores() {
@@ -418,20 +440,50 @@ function proveedores() {
 
 window.setFinalCustomer = () => { editingCustomer = { id:1, nombre:'Consumidor Final', dni:'', cuit:'', telefono:'', email:'', direccion:'', descuento:0, saldo:0, observaciones:'' }; render(); };
 window.editCustomer = id => { editingCustomer = db.clientes.find(c=>Number(c.id)===Number(id)) || null; render(); };
+window.performCustomerSearch = async () => {
+  const q = (document.getElementById('qCliente')?.value || '').trim();
+  if (!q) {
+    await loadClients();
+    render();
+    return;
+  }
+  const result = await api.searchClients(q);
+  if (result && result.ok && Array.isArray(result.clients)) {
+    db.clientes = result.clients;
+  } else if (Array.isArray(result)) {
+    db.clientes = result;
+  }
+  render();
+};
 window.saveCustomer = async () => {
   const obj = { ...(editingCustomer||{}), id: editingCustomer?.id || Date.now(), nombre: $('#c_nombre').value.trim(), dni: $('#c_dni').value.trim(), cuit: $('#c_cuit').value.trim(), telefono: $('#c_tel').value.trim(), email: $('#c_email').value.trim(), direccion: $('#c_dir').value.trim(), descuento: Number($('#c_desc').value||0), saldo: Number($('#c_saldo').value||0), observaciones: $('#c_obs').value.trim(), activo:true };
   if(!obj.nombre) return alert('Ingrese nombre del cliente');
-  const i = db.clientes.findIndex(c=>Number(c.id)===Number(obj.id));
-  if(i>=0) db.clientes[i]=obj; else db.clientes.unshift(obj);
-  editingCustomer=null;
-  await persist('CLIENTE_GUARDADO', obj.nombre);
+  const result = await api.saveClient(obj, user);
+  if (!result?.ok) return alert(result?.msg || 'No se pudo guardar el cliente');
+  await loadClients();
+  editingCustomer = null;
+  render();
 };
 window.deleteCustomer = async id => {
   if(Number(id)===1) return alert('No se puede eliminar Consumidor Final');
   if(!confirm('¿Eliminar cliente?')) return;
-  const c = db.clientes.find(x=>Number(x.id)===Number(id));
+  const result = await api.deleteClient(id, user);
+  if (!result?.ok) return alert(result?.msg || 'No se pudo eliminar el cliente');
   db.clientes = db.clientes.filter(x=>Number(x.id)!==Number(id));
-  await persist('CLIENTE_ELIMINADO', c?.nombre || String(id));
+  editingCustomer = null;
+  await loadClients();
+  render();
+};
+window.addClientPurchase = async (clientId, purchase) => {
+  const result = await api.addClientPurchase(clientId, purchase);
+  if (!result?.ok) return alert(result?.msg || 'No se pudo registrar la compra del cliente');
+  if (result.client) {
+    const index = db.clientes.findIndex(c => Number(c.id) === Number(result.client.id));
+    if (index >= 0) db.clientes[index] = result.client;
+    else db.clientes.unshift(result.client);
+  }
+  render();
+  return result.client;
 };
 window.editSupplierFull = id => { editingSupplier = db.proveedores.find(p=>Number(p.id)===Number(id)) || null; render(); };
 window.saveSupplierFull = async () => {
