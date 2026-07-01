@@ -1,0 +1,1 @@
+Directorio `modules` para agrupar funcionalidades mayores del sistema (tickets, ventas, inventario).

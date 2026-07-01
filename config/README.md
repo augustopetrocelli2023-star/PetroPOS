@@ -1,0 +1,1 @@
+Directorio `config` para archivos de configuración y esquemas. Actualmente contiene `petropos.json`.

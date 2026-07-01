@@ -2,16 +2,13 @@ const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const repo = require('./repositories/jsonRepository');
+const service = require('./services/businessService');
 
 const ROOT = __dirname;
-const DATA_DIR = path.join(ROOT,'database');
-const BACKUP_DIR = path.join(DATA_DIR,'backups');
-const TICKET_DIR = path.join(ROOT,'tickets');
-const LOG_DIR = path.join(ROOT,'logs');
-const DB_FILE = path.join(DATA_DIR,'petropos-data.json');
 const VERSION = '1.0 RC Build 010';
 
-function ensureDirs(){ [DATA_DIR,BACKUP_DIR,TICKET_DIR,LOG_DIR,path.join(ROOT,'config')].forEach(d=>{ if(!fs.existsSync(d)) fs.mkdirSync(d,{recursive:true}); }); }
+function ensureDirs(){ [repo.DATA_DIR,repo.BACKUP_DIR,repo.TICKETS_DIR,path.join(ROOT,'config')].forEach(d=>{ if(!fs.existsSync(d)) fs.mkdirSync(d,{recursive:true}); }); }
 function now(){ return new Date().toISOString(); }
 function today(){ return new Date().toISOString().slice(0,10); }
 function seed(){ return {
@@ -29,58 +26,35 @@ function seed(){ return {
   ],
   ventas:[], compras:[], stockMovimientos:[], gastos:[], auditoria:[]
 };}
-function load(){ ensureDirs(); if(!fs.existsSync(DB_FILE)) save(seed()); return JSON.parse(fs.readFileSync(DB_FILE,'utf8')); }
-function save(db){ fs.writeFileSync(DB_FILE, JSON.stringify(db,null,2),'utf8'); }
-function audit(db,user,accion,detalle){ db.auditoria.unshift({fecha:now(),usuario:user?.usuario||'sistema',rol:user?.rol||'',pc:os.hostname(),accion,detalle}); db.auditoria=db.auditoria.slice(0,1000); }
-function backup(){ const stamp = new Date().toISOString().replace(/[:.]/g,'-'); const dest=path.join(BACKUP_DIR,`petropos-backup-${stamp}.json`); fs.copyFileSync(DB_FILE,dest); return dest; }
-function createWindow(){ const win = new BrowserWindow({width:1360,height:820,minWidth:1100,minHeight:700,webPreferences:{preload:path.join(__dirname,'preload.js')}}); win.loadFile(path.join(__dirname,'app','index.html')); }
+function load(){ return repo.load(); }
+function save(db){ return repo.save(db); }
+function audit(db,user,accion,detalle){ db.auditoria = db.auditoria || []; db.auditoria.unshift({fecha:now(),usuario:user?.usuario||'sistema',rol:user?.rol||'',pc:os.hostname(),accion,detalle}); db.auditoria=db.auditoria.slice(0,1000); return repo.save(db); }
+function backup(){ return repo.backup(); }
+function createWindow(){
+  const win = new BrowserWindow({width:1360,height:820,minWidth:1100,minHeight:700,webPreferences:{preload:path.join(__dirname,'preload.js')}});
+  win.loadFile(path.join(__dirname,'app','index.html'));
+  // DevTools opening removed in production runs
+  win.webContents.on('console-message',(e,level,message,line,source)=>{ console.log('RENDERER_CONSOLE',level,message,source + ':' + line); });
+  win.webContents.on('did-finish-load', async ()=>{
+    try{
+      const scripts = await win.webContents.executeJavaScript("Array.from(document.querySelectorAll('script')).map(s=>s.src||s.getAttribute('src')||'inline').join('\\n')");
+      console.log('PAGE_SCRIPTS:\n' + scripts);
+    }catch(err){ console.log('PAGE_SCRIPTS_ERROR',String(err)); }
+  });
+}
 app.whenReady().then(()=>{ ensureDirs(); load(); createWindow(); });
 app.on('window-all-closed',()=>{ if(process.platform!=='darwin') app.quit(); });
 
 ipcMain.handle('db:get',()=>load());
 ipcMain.handle('db:save',(e,db,user,accion,detalle)=>{ audit(db,user,accion,detalle); save(db); return load(); });
 ipcMain.handle('backup:create',()=>backup());
-ipcMain.handle('ticket:create',(e,venta,negocio)=>{
-  const nro = venta.numero;
-  const file = path.join(TICKET_DIR,`${nro}.txt`);
-  const width = String(negocio.ticketMm || '80') === '58' ? 32 : 42;
-  const sep = '-'.repeat(width);
-  const center = (t='') => String(t).slice(0,width).padStart(Math.floor((width+String(t).length)/2)).padEnd(width);
-  const moneyLine = (label, value) => `${String(label).padEnd(width-14).slice(0,width-14)}$${Number(value||0).toFixed(2).padStart(13)}`;
-  const lines=[];
-  lines.push(center(negocio.nombre||'PetroPOS Professional'));
-  if(negocio.razonSocial) lines.push(center(negocio.razonSocial));
-  if(negocio.cuit) lines.push(center('CUIT: '+negocio.cuit));
-  if(negocio.iva) lines.push(center(negocio.iva));
-  if(negocio.direccion) lines.push(center(negocio.direccion));
-  if(negocio.telefono) lines.push(center('Tel: '+negocio.telefono));
-  lines.push(sep);
-  lines.push(`Ticket: ${nro}`);
-  if (venta.anulada) lines.push(center('*** TICKET ANULADO ***'));
-  if (venta.devolucion) lines.push(center('*** CON DEVOLUCION ***'));
-  lines.push(`Fecha : ${new Date(venta.fecha).toLocaleString('es-AR')}`);
-  lines.push(`Caja  : Local`);
-  lines.push(`Cajero: ${venta.usuario}`);
-  if(venta.clienteNombre) lines.push(`Cliente: ${venta.clienteNombre}`);
-  lines.push(sep);
-  venta.items.forEach(i=>{
-    lines.push(String(i.descripcion).slice(0,width));
-    lines.push(`${String(i.cantidad).padStart(3)} x $${Number(i.precio||0).toFixed(2).padStart(10)} = $${Number(i.precio*i.cantidad||0).toFixed(2).padStart(10)}`);
-  });
-  lines.push(sep);
-  const subtotal = venta.items.reduce((a,i)=>a+Number(i.precio||0)*Number(i.cantidad||0),0);
-  lines.push(moneyLine('Subtotal', subtotal));
-  if (venta.descuento) lines.push(moneyLine('Descuento', -Number(venta.descuento||0)));
-  lines.push(moneyLine('TOTAL', venta.total));
-  lines.push(`Pago: ${venta.pago}`);
-  if (venta.recibido) lines.push(moneyLine('Recibido', venta.recibido));
-  if (venta.vuelto) lines.push(moneyLine('Vuelto', venta.vuelto));
-  lines.push(sep);
-  lines.push(center(negocio.ticketLeyenda || 'Gracias por su compra'));
-  lines.push(center('PetroPOS Professional'));
-  fs.writeFileSync(file,lines.join('\n'),'utf8');
-  if (negocio.ticketAutoOpen !== false) shell.openPath(file);
-  return file;
+ipcMain.handle('ticket:create',async(e,venta,negocio)=>{
+  // delegate to service to build and write ticket
+  try {
+    const p = await service.ticket(venta, negocio);
+    if (negocio.ticketAutoOpen !== false) shell.openPath(p);
+    return p;
+  } catch (err) { return err.message || String(err); }
 });
 
 ipcMain.handle('system:printers', async () => {

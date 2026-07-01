@@ -15,12 +15,13 @@ const $ = s => document.querySelector(s);
 const money = n => '$ ' + Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const esc = v => String(v ?? '').replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+var api = window.dataService || window.api;
 const canAdmin = () => user && String(user.rol || '').toUpperCase() === 'ADMIN';
 const activeSales = () => db.ventas.filter(v => !v.anulada);
 const lastActiveSale = () => activeSales()[0];
 
 async function init() {
-  db = normalizeDB(await window.api.getDB());
+  db = normalizeDB(await api.getDB());
   restoreDraft();
   renderLogin();
   document.addEventListener('keydown', handleShortcuts);
@@ -65,7 +66,7 @@ function normalizeDB(input) {
 }
 
 async function persist(accion, detalle, rerender = true) {
-  db = await window.api.saveDB(db, user, accion, detalle);
+  try { db = await api.saveDB(db, user, accion, detalle); } catch(e){ /* fallback noop */ }
   db = normalizeDB(db);
   if (rerender) render();
 }
@@ -257,7 +258,7 @@ window.addScan = () => {
   render();
 };
 function resetSale() { cart = []; saleBusy = false; saleState = { clienteId: 1, pago: 'Efectivo', recibido: 0, descuento: 0 }; db.ventaTemporal = null; }
-function saveDraft(show = true) { db.ventaTemporal = cart.length ? { cart, saleState, fecha: new Date().toISOString() } : null; window.api.saveDB(db, user, 'VENTA_TEMPORAL', 'Autoguardado'); if (show) alert('Venta temporal guardada'); }
+function saveDraft(show = true) { db.ventaTemporal = cart.length ? { cart, saleState, fecha: new Date().toISOString() } : null; api.saveDB(db, user, 'VENTA_TEMPORAL', 'Autoguardado'); if (show) alert('Venta temporal guardada'); }
 window.restoreDraft = restoreDraft;
 function restoreDraft(show = false) {
   if (!db?.ventaTemporal) { if (show) alert('No hay venta temporal guardada'); return; }
@@ -292,7 +293,7 @@ window.finishSale = async () => {
     db.caja.movimientos.unshift({ fecha: new Date().toISOString(), tipo: 'VENTA', detalle: venta.numero, monto: venta.total, pago: venta.pago, usuario: user.usuario });
     resetSale();
     await persist('VENTA_REALIZADA', venta.numero + ' ' + money(venta.total), false);
-    await window.api.ticket(venta, db.negocio);
+    await api.ticket(venta, db.negocio);
     saleBusy = false;
     render();
     const st = $('#saleStatus');
@@ -319,7 +320,7 @@ function tickets() {
   return `<h1>Tickets</h1><div class="grid g4"><div class="stat"><h3>Tickets emitidos</h3><div class="num">${db.ventas.length}</div></div><div class="stat"><h3>Anulados</h3><div class="num">${anuladas}</div></div><div class="stat"><h3>Devoluciones</h3><div class="num">${devs}</div></div><div class="stat"><h3>Último ticket</h3><div class="num">${lastActiveSale()?.numero || '-'}</div></div></div><div class="panel"><div class="toolbar"><input id="qTicket" value="${esc(q)}" placeholder="Buscar ticket, cliente, cajero o pago" oninput="render()"><button class="secondary" onclick="reprintLastTicket()">F8 Reimprimir último</button><button class="secondary" onclick="exportCSV('ventas')">Exportar ventas CSV</button></div><table class="table"><tr><th>Ticket</th><th>Fecha</th><th>Cliente</th><th>Pago</th><th>Total</th><th>Estado</th><th>Acciones</th></tr>${rows.slice(0,150).map(v => `<tr><td>${esc(v.numero)}</td><td>${new Date(v.fecha).toLocaleString('es-AR')}</td><td>${esc(v.clienteNombre||'')}</td><td>${esc(v.pago)}</td><td>${money(v.total)}</td><td>${v.anulada ? '<span class="pill low">ANULADA</span>' : '<span class="pill okpill">OK</span>'}</td><td><button class="secondary" onclick="reprintTicket(${v.id})">Reimprimir</button> <button class="secondary" onclick="refundSale(${v.id})" ${v.anulada?'disabled':''}>Devolución</button> <button class="danger" onclick="voidSale(${v.id})" ${v.anulada?'disabled':''}>Anular</button></td></tr>`).join('')}</table></div>`;
 }
 window.reprintLastTicket = async () => { const v = lastActiveSale(); if (!v) return alert('No hay tickets para reimprimir'); await reprintTicket(v.id); };
-window.reprintTicket = async id => { const v = db.ventas.find(x => x.id === id); if (!v) return alert('Ticket no encontrado'); const f = await window.api.ticket(v, db.negocio); alert('Ticket generado:\n' + f); };
+window.reprintTicket = async id => { const v = db.ventas.find(x => x.id === id); if (!v) return alert('Ticket no encontrado'); const f = await api.ticket(v, db.negocio); alert('Ticket generado:\n' + f); };
 window.voidSale = async id => {
   if (!canAdmin()) return alert('Solo administrador puede anular ventas');
   const v = db.ventas.find(x => x.id === id);
@@ -457,16 +458,16 @@ function config() {
   return `<h1>Configuración</h1><div class="grid g2"><div class="panel"><h2>Negocio y ticket</h2><div class="form">${fields.map(([f,l]) => `<div class="${f==='ticketLeyenda'||f==='backupRuta'?'wide':''}"><label>${l}</label><input id="cfg_${f}" value="${esc(n[f] || '')}"></div>`).join('')}<div><label><input id="cfg_ticketAutoOpen" type="checkbox" ${n.ticketAutoOpen !== false ? 'checked' : ''}> Abrir TXT del ticket al vender</label></div><div><label><input id="cfg_abrirCajon" type="checkbox" ${n.abrirCajon ? 'checked' : ''}> Abrir cajón al cobrar efectivo</label></div><div class="full toolbar"><button onclick="saveConfig()">Guardar configuración</button><button class="secondary" onclick="testTicket()">Ticket de prueba</button><button class="secondary" onclick="loadPrinters()">Ver impresoras</button></div></div></div><div class="panel"><h2>Impresoras detectadas</h2><div id="printerList"><p class="muted">Presioná “Ver impresoras”.</p></div><h2>Hardware preparado</h2><p>Ticketera: ${esc(n.impresora || 'Windows / TXT')}</p><p>Lector: ${esc(n.lectorModo || 'USB teclado')}</p><p>Point: ${esc(n.pointTerminal || 'No configurado')}</p></div></div>`;
 }
 window.saveConfig = async () => { ['nombre', 'razonSocial', 'cuit', 'direccion', 'telefono', 'email', 'iva', 'impresora', 'ticketMm', 'ticketLeyenda', 'logo', 'lectorModo', 'pointTerminal', 'backupRuta', 'puntoVenta'].forEach(f => db.negocio[f] = $(`#cfg_${f}`)?.value || ''); db.negocio.ticketAutoOpen = !!$('#cfg_ticketAutoOpen')?.checked; db.negocio.abrirCajon = !!$('#cfg_abrirCajon')?.checked; await persist('CONFIG_GUARDADA', 'Datos del comercio y hardware'); };
-window.testTicket = async () => { const venta = { numero:'PRUEBA-'+Date.now(), fecha:new Date().toISOString(), usuario:user.usuario, clienteNombre:'Consumidor Final', pago:'Prueba', descuento:0, recibido:0, vuelto:0, total:1234.56, items:[{descripcion:'Producto de prueba', cantidad:1, precio:1234.56}] }; const f = await window.api.ticket(venta, db.negocio); alert('Ticket de prueba generado:\n' + f); };
-window.loadPrinters = async () => { const el=$('#printerList'); if(el) el.innerHTML='<p class="muted">Leyendo impresoras...</p>'; try { printerCache = await window.api.printers(); if(el) el.innerHTML = printerCache.length ? `<table class="table"><tr><th>Nombre</th><th>Descripción</th></tr>${printerCache.map(p=>`<tr><td>${esc(p.name||'')}</td><td>${esc(p.description||p.displayName||'')}</td></tr>`).join('')}</table>` : '<p class="muted">No se detectaron impresoras.</p>'; } catch(err) { if(el) el.innerHTML='<p class="dangerText">No se pudieron leer impresoras.</p>'; } };
+window.testTicket = async () => { const venta = { numero:'PRUEBA-'+Date.now(), fecha:new Date().toISOString(), usuario:user.usuario, clienteNombre:'Consumidor Final', pago:'Prueba', descuento:0, recibido:0, vuelto:0, total:1234.56, items:[{descripcion:'Producto de prueba', cantidad:1, precio:1234.56}] }; const f = await api.ticket(venta, db.negocio); alert('Ticket de prueba generado:\n' + f); };
+window.loadPrinters = async () => { const el=$('#printerList'); if(el) el.innerHTML='<p class="muted">Leyendo impresoras...</p>'; try { printerCache = await api.printers(); if(el) el.innerHTML = printerCache.length ? `<table class="table"><tr><th>Nombre</th><th>Descripción</th></tr>${printerCache.map(p=>`<tr><td>${esc(p.name||'')}</td><td>${esc(p.description||p.displayName||'')}</td></tr>`).join('')}</table>` : '<p class="muted">No se detectaron impresoras.</p>'; } catch(err) { if(el) el.innerHTML='<p class="dangerText">No se pudieron leer impresoras.</p>'; } };
 
 function tecnico() {
   const dbSize = JSON.stringify(db).length;
   const lastAudit = db.auditoria[0];
   return `<h1>Centro Técnico</h1><div class="grid g4"><div class="stat"><h3>Base local</h3><div class="num">JSON / migración</div></div><div class="stat"><h3>Tamaño datos</h3><div class="num">${Math.round(dbSize/1024)} KB</div></div><div class="stat"><h3>Versión</h3><div class="num">Build 010</div></div><div class="stat"><h3>Última acción</h3><div class="num">${lastAudit ? esc(lastAudit.accion) : '-'}</div></div></div><div class="panel"><div class="toolbar"><button onclick="doBackup()">Crear backup</button><button class="secondary" onclick="testTicket()">Ticket de prueba</button><button class="secondary" onclick="loadPrintersTech()">Diagnóstico impresoras</button><button class="secondary" onclick="exportCSV('ventas')">Exportar ventas CSV</button><button class="secondary" onclick="exportCSV('productos')">Exportar productos CSV</button></div><div id="printerTech"></div><h2>Auditoría</h2><table class="table"><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Detalle</th></tr>${db.auditoria.slice(0, 100).map(a => `<tr><td>${new Date(a.fecha).toLocaleString('es-AR')}</td><td>${esc(a.usuario)}</td><td>${esc(a.accion)}</td><td>${esc(a.detalle)}</td></tr>`).join('')}</table></div>`;
 }
-window.loadPrintersTech = async () => { const el=$('#printerTech'); if(el) el.innerHTML='<p class="muted">Leyendo impresoras...</p>'; const ps = await window.api.printers(); if(el) el.innerHTML = `<h2>Impresoras</h2>` + (ps.length ? `<table class="table"><tr><th>Nombre</th><th>Descripción</th></tr>${ps.map(p=>`<tr><td>${esc(p.name||'')}</td><td>${esc(p.description||p.displayName||'')}</td></tr>`).join('')}</table>` : '<p class="muted">No se detectaron impresoras.</p>'); };
-window.doBackup = async () => { const f = await window.api.backup(); alert('Backup creado:\n' + f); };
+window.loadPrintersTech = async () => { const el=$('#printerTech'); if(el) el.innerHTML='<p class="muted">Leyendo impresoras...</p>'; const ps = await api.printers(); if(el) el.innerHTML = `<h2>Impresoras</h2>` + (ps.length ? `<table class="table"><tr><th>Nombre</th><th>Descripción</th></tr>${ps.map(p=>`<tr><td>${esc(p.name||'')}</td><td>${esc(p.description||p.displayName||'')}</td></tr>`).join('')}</table>` : '<p class="muted">No se detectaron impresoras.</p>'); };
+window.doBackup = async () => { const f = await api.backup(); alert('Backup creado:\n' + f); };
 window.exportCSV = type => { let rows = []; if (type === 'productos') rows = [['codigo', 'barra', 'descripcion', 'marca', 'categoria', 'costo', 'precio', 'stock'], ...db.productos.map(p => [p.codigo, p.barra, p.descripcion, p.marca, p.categoria, p.costo, p.precio, p.stock])]; else if (type === 'compras') rows = [['fecha','producto','proveedor','cantidad','costo','total'], ...db.compras.map(c => [c.fecha,c.producto,c.proveedor,c.cantidad,c.costo,c.total])]; else if (type === 'clientes') rows = [['nombre','dni','cuit','telefono','email','saldo'], ...db.clientes.map(c => [c.nombre,c.dni,c.cuit,c.telefono,c.email,c.saldo])]; else if (type === 'proveedores') rows = [['nombre','cuit','contacto','telefono','email','direccion'], ...db.proveedores.map(p => [p.nombre,p.cuit,p.contacto,p.telefono,p.email,p.direccion])]; else rows = [['numero', 'fecha', 'usuario', 'cliente', 'pago', 'total'], ...db.ventas.map(v => [v.numero, v.fecha, v.usuario, v.clienteNombre || '', v.pago, v.total])]; const csv = rows.map(r => r.map(x => `"${String(x ?? '').replace(/"/g, '""')}"`).join(';')).join('\n'); const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${type}.csv`; a.click(); };
 
 window.updateSaleField = updateSaleField;

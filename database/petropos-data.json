@@ -40,6 +40,22 @@
     "saldoInicial": 100,
     "movimientos": [
       {
+        "fecha": "2026-07-01T01:12:27.686Z",
+        "tipo": "VENTA",
+        "detalle": "VTA-000005",
+        "monto": 1100,
+        "pago": "Efectivo",
+        "usuario": "admin"
+      },
+      {
+        "fecha": "2026-07-01T01:11:18.150Z",
+        "tipo": "VENTA",
+        "detalle": "VTA-000004",
+        "monto": 1100,
+        "pago": "Efectivo",
+        "usuario": "admin"
+      },
+      {
         "fecha": "2026-06-30T23:41:18.286Z",
         "tipo": "VENTA",
         "detalle": "VTA-000003",
@@ -111,7 +127,7 @@
       "costo": 1000,
       "precio": 1100,
       "iva": 21,
-      "stock": 8,
+      "stock": 6,
       "minimo": 10,
       "activo": true,
       "createdAt": "2026-06-30T01:29:24.374Z"
@@ -153,6 +169,53 @@
   ],
   "ventas": [
     {
+      "id": 1782868347686,
+      "numero": "VTA-000005",
+      "fecha": "2026-07-01T01:12:27.686Z",
+      "usuario": "admin",
+      "cliente": 1,
+      "clienteNombre": "Consumidor Final",
+      "pago": "Efectivo",
+      "descuento": 0,
+      "recibido": 0,
+      "vuelto": 0,
+      "items": [
+        {
+          "id": 1782782964374,
+          "codigo": "P000003",
+          "descripcion": "pepsi",
+          "costo": 1000,
+          "precio": 1100,
+          "cantidad": 1
+        }
+      ],
+      "total": 1100
+    },
+    {
+      "id": 1782868278150,
+      "numero": "VTA-000004",
+      "fecha": "2026-07-01T01:11:18.150Z",
+      "usuario": "admin",
+      "cliente": 1,
+      "clienteNombre": "Consumidor Final",
+      "pago": "Efectivo",
+      "descuento": 0,
+      "recibido": 0,
+      "vuelto": 0,
+      "items": [
+        {
+          "id": 1782782964374,
+          "codigo": "P000003",
+          "descripcion": "pepsi",
+          "costo": 1000,
+          "precio": 1100,
+          "cantidad": 1
+        }
+      ],
+      "total": 1100,
+      "anulada": false
+    },
+    {
       "id": 1782862878286,
       "numero": "VTA-000003",
       "fecha": "2026-06-30T23:41:18.286Z",
@@ -173,7 +236,8 @@
           "cantidad": 1
         }
       ],
-      "total": 1100
+      "total": 1100,
+      "anulada": false
     },
     {
       "id": 1782858663005,
@@ -219,6 +283,22 @@
     }
   ],
   "auditoria": [
+    {
+      "fecha": "2026-07-01T01:12:27.687Z",
+      "usuario": "admin",
+      "rol": "ADMIN",
+      "pc": "DESKTOP-VCTG82R",
+      "accion": "VENTA_REALIZADA",
+      "detalle": "VTA-000005 $ 1.100,00"
+    },
+    {
+      "fecha": "2026-07-01T01:11:18.151Z",
+      "usuario": "admin",
+      "rol": "ADMIN",
+      "pc": "DESKTOP-VCTG82R",
+      "accion": "VENTA_REALIZADA",
+      "detalle": "VTA-000004 $ 1.100,00"
+    },
     {
       "fecha": "2026-06-30T23:41:18.287Z",
       "usuario": "admin",
@@ -278,6 +358,24 @@
   ],
   "compras": [],
   "stockMovimientos": [
+    {
+      "fecha": "2026-07-01T01:12:27.686Z",
+      "productoId": 1782782964374,
+      "producto": "pepsi",
+      "tipo": "VENTA",
+      "cantidad": -1,
+      "referencia": "VTA-000005",
+      "usuario": "admin"
+    },
+    {
+      "fecha": "2026-07-01T01:11:18.150Z",
+      "productoId": 1782782964374,
+      "producto": "pepsi",
+      "tipo": "VENTA",
+      "cantidad": -1,
+      "referencia": "VTA-000004",
+      "usuario": "admin"
+    },
     {
       "fecha": "2026-06-30T23:41:18.286Z",
       "productoId": 1782782964374,
