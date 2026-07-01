@@ -31,6 +31,10 @@ function normalizeLegacy(db){
   if (Array.isArray(db.auditoria) && !Array.isArray(db.audits)) db.audits = db.auditoria;
   if (Array.isArray(db.clients) && !Array.isArray(db.clientes)) db.clientes = db.clients;
   if (Array.isArray(db.clientes) && !Array.isArray(db.clients)) db.clients = db.clientes;
+  if (Array.isArray(db.suppliers) && !Array.isArray(db.proveedores)) db.proveedores = db.suppliers;
+  if (Array.isArray(db.proveedores) && !Array.isArray(db.suppliers)) db.suppliers = db.proveedores;
+  if (Array.isArray(db.purchases) && !Array.isArray(db.compras)) db.compras = db.purchases;
+  if (Array.isArray(db.compras) && !Array.isArray(db.purchases)) db.purchases = db.compras;
   return db;
 }
 

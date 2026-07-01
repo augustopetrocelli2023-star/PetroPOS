@@ -6,6 +6,8 @@ const repo = require('./repositories/jsonRepository');
 const service = require('./services/businessService');
 const productService = require('./services/productService');
 const clientService = require('./services/clientService');
+const supplierService = require('./services/supplierService');
+const purchaseService = require('./services/purchaseService');
 
 const ROOT = __dirname;
 const VERSION = '1.0 RC Build 010';
@@ -65,6 +67,11 @@ ipcMain.handle('searchClients',(e,term)=>service.searchClients({term}));
 ipcMain.handle('saveClient',(e,payload)=>service.saveClient(payload));
 ipcMain.handle('deleteClient',(e,payload)=>service.deleteClient(payload));
 ipcMain.handle('addClientPurchase',(e,payload)=>service.addClientPurchase(payload));
+ipcMain.handle('getSuppliers',()=>supplierService.getSuppliers());
+ipcMain.handle('saveSupplier',(e,payload)=>service.saveSupplier(payload));
+ipcMain.handle('deleteSupplier',(e,payload)=>service.deleteSupplier(payload));
+ipcMain.handle('getPurchases',()=>purchaseService.getPurchases());
+ipcMain.handle('addPurchase',(e,payload)=>purchaseService.addPurchase(payload));
 ipcMain.handle('backup:create',()=>backup());
 ipcMain.handle('ticket:create',async(e,venta,negocio)=>{
   // delegate to service to build and write ticket

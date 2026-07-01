@@ -261,6 +261,60 @@
   ],
   "audits": [
     {
+      "accion": "LOGIN",
+      "usuario": "admin",
+      "detalle": "Inicio de sesión",
+      "fecha": "2026-07-01T03:10:21.741Z"
+    },
+    {
+      "accion": "LOGIN",
+      "usuario": "admin",
+      "detalle": "Inicio de sesión",
+      "fecha": "2026-07-01T03:09:43.047Z"
+    },
+    {
+      "accion": "LOGIN_FAILED",
+      "usuario": "noexiste",
+      "detalle": "Intento fallido para noexiste",
+      "fecha": "2026-07-01T03:09:42.845Z"
+    },
+    {
+      "accion": "LOGIN",
+      "usuario": "vendedor",
+      "detalle": "Inicio de sesión",
+      "fecha": "2026-07-01T03:09:42.838Z"
+    },
+    {
+      "accion": "LOGIN",
+      "usuario": "admin",
+      "detalle": "Inicio de sesión",
+      "fecha": "2026-07-01T03:09:42.827Z"
+    },
+    {
+      "accion": "LOGIN",
+      "usuario": "admin",
+      "detalle": "Inicio de sesión",
+      "fecha": "2026-07-01T03:08:51.841Z"
+    },
+    {
+      "accion": "LOGIN",
+      "usuario": "vendedor",
+      "detalle": "Inicio de sesión",
+      "fecha": "2026-07-01T03:08:49.110Z"
+    },
+    {
+      "accion": "LOGIN",
+      "usuario": "admin",
+      "detalle": "Inicio de sesión",
+      "fecha": "2026-07-01T03:08:49.097Z"
+    },
+    {
+      "accion": "LOGIN",
+      "usuario": "admin",
+      "detalle": "Inicio de sesión",
+      "fecha": "2026-07-01T03:05:43.726Z"
+    },
+    {
       "fecha": "2026-07-01T02:39:01.756Z",
       "usuario": "admin",
       "rol": "ADMIN",
@@ -367,7 +421,24 @@
     "puntoVenta": "Caja 1",
     "abrirCajon": false
   },
-  "usuarios": [],
+  "usuarios": [
+    {
+      "id": 1,
+      "usuario": "admin",
+      "clave": "admin123",
+      "nombre": "Administrador",
+      "rol": "ADMIN",
+      "activo": true
+    },
+    {
+      "id": 2,
+      "usuario": "vendedor",
+      "clave": "venta123",
+      "nombre": "Vendedor",
+      "rol": "VENDEDOR",
+      "activo": true
+    }
+  ],
   "productos": [
     {
       "id": 1782782964374,
@@ -736,5 +807,29 @@
     ],
     "ultimoCierre": null
   },
-  "ventaTemporal": null
+  "ventaTemporal": null,
+  "purchases": [],
+  "users": [
+    {
+      "id": 1,
+      "usuario": "admin",
+      "clave": "admin123",
+      "nombre": "Administrador",
+      "rol": "ADMIN",
+      "activo": true
+    },
+    {
+      "id": 2,
+      "usuario": "vendedor",
+      "clave": "venta123",
+      "nombre": "Vendedor",
+      "rol": "VENDEDOR",
+      "activo": true
+    }
+  ],
+  "security": {
+    "loginFailures": {
+      "noexiste": 1
+    }
+  }
 }

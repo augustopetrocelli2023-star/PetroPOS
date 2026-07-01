@@ -25,8 +25,13 @@ async function init() {
   const state = api.getDB ? await api.getDB() : (api.getState ? await api.getState() : null);
   db = normalizeDB(state);
   await loadClients();
+  await loadSuppliers();
+  await loadPurchases();
   restoreDraft();
   renderLogin();
+  // Ensure the UI accepts pointer events and that the username field gains focus
+  try { document.body.style.pointerEvents = 'auto'; } catch (e) { /* ignore */ }
+  setTimeout(()=>{ const userField = $('#u'); if(userField) try{ userField.focus(); }catch(e){} }, 80);
   document.addEventListener('keydown', handleShortcuts);
 }
 
@@ -42,6 +47,26 @@ async function loadClients() {
     db.clientes.unshift({ id: 1, nombre: 'Consumidor Final', activo: true });
   }
   clientsLoaded = true;
+}
+
+async function loadSuppliers() {
+  const result = await api.getSuppliers();
+  if (result && result.ok && Array.isArray(result.suppliers)) {
+    db.proveedores = result.suppliers;
+  } else if (Array.isArray(result)) {
+    db.proveedores = result;
+  }
+  db.proveedores = Array.isArray(db.proveedores) ? db.proveedores : [];
+}
+
+async function loadPurchases() {
+  const result = await api.getPurchases();
+  if (result && result.ok && Array.isArray(result.purchases)) {
+    db.compras = result.purchases;
+  } else if (Array.isArray(result)) {
+    db.compras = result;
+  }
+  db.compras = Array.isArray(db.compras) ? db.compras : [];
 }
 
 function normalizeDB(input) {
@@ -60,11 +85,16 @@ function normalizeDB(input) {
   d.productos = Array.isArray(d.productos) ? d.productos : (Array.isArray(d.products) ? d.products : []);
   d.products = d.productos;
   d.clientes = Array.isArray(d.clientes) ? d.clientes : [{ id: 1, nombre: 'Consumidor Final', activo: true }];
-  d.proveedores = Array.isArray(d.proveedores) ? d.proveedores : [];
+  d.proveedores = Array.isArray(d.proveedores) ? d.proveedores : (Array.isArray(d.suppliers) ? d.suppliers : []);
+  d.suppliers = d.proveedores;
   d.categorias = Array.isArray(d.categorias) ? d.categorias : ['General'];
   d.marcas = Array.isArray(d.marcas) ? d.marcas : ['Sin marca'];
   d.ventas = Array.isArray(d.ventas) ? d.ventas : (Array.isArray(d.sales) ? d.sales : []);
   d.sales = d.ventas;
+  d.compras = Array.isArray(d.compras) ? d.compras : (Array.isArray(d.purchases) ? d.purchases : []);
+  d.purchases = d.compras;
+  d.stockMovimientos = Array.isArray(d.stockMovimientos) ? d.stockMovimientos : [];
+  d.caja = d.caja || { abierta: false, movimientos: [], saldoInicial: 0 };
   d.devoluciones = Array.isArray(d.devoluciones) ? d.devoluciones : [];
   d.compras = Array.isArray(d.compras) ? d.compras : [];
   d.stockMovimientos = Array.isArray(d.stockMovimientos) ? d.stockMovimientos : [];
@@ -125,7 +155,10 @@ function renderLogin() {
   const pass = $('#p');
   if (pass) pass.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
   const userField = $('#u');
-  if (userField) userField.focus();
+  if (userField) {
+    userField.tabIndex = 0;
+    setTimeout(() => { try { userField.focus(); } catch (e) {} }, 30);
+  }
 }
 
 async function login() {
@@ -489,16 +522,19 @@ window.editSupplierFull = id => { editingSupplier = db.proveedores.find(p=>Numbe
 window.saveSupplierFull = async () => {
   const obj = { ...(editingSupplier||{}), id: editingSupplier?.id || Date.now(), nombre: $('#s_nombre').value.trim(), cuit: $('#s_cuit').value.trim(), contacto: $('#s_contacto').value.trim(), telefono: $('#s_tel').value.trim(), email: $('#s_email').value.trim(), direccion: $('#s_dir').value.trim(), observaciones: $('#s_obs').value.trim(), activo:true };
   if(!obj.nombre) return alert('Ingrese nombre del proveedor');
-  const i = db.proveedores.findIndex(p=>Number(p.id)===Number(obj.id));
-  if(i>=0) db.proveedores[i]=obj; else db.proveedores.unshift(obj);
+  const result = await api.saveSupplier(obj, user);
+  if (!result?.ok) return alert(result?.msg || 'No se pudo guardar el proveedor');
+  await loadSuppliers();
   editingSupplier=null;
-  await persist('PROVEEDOR_GUARDADO', obj.nombre);
+  render();
 };
 window.deleteSupplierFull = async id => {
   if(!confirm('¿Eliminar proveedor?')) return;
-  const p = db.proveedores.find(x=>Number(x.id)===Number(id));
-  db.proveedores = db.proveedores.filter(x=>Number(x.id)!==Number(id));
-  await persist('PROVEEDOR_ELIMINADO', p?.nombre || String(id));
+  const result = await api.deleteSupplier(id, user);
+  if (!result?.ok) return alert(result?.msg || 'No se pudo eliminar el proveedor');
+  await loadSuppliers();
+  editingSupplier=null;
+  render();
 };
 
 function compras() {
@@ -513,12 +549,14 @@ window.addPurchase = async () => {
   const cantidad = Number($('#buyQty')?.value || 0);
   const costo = Number($('#buyCost')?.value || p.costo || 0);
   if(cantidad <= 0) return alert('Ingrese una cantidad válida');
-  p.stock = Number(p.stock||0) + cantidad;
-  if(costo > 0) p.costo = costo;
   const compra = {id:Date.now(), fecha:new Date().toISOString(), productoId:p.id, producto:p.descripcion, proveedor:p.proveedor||'Proveedor General', cantidad, costo, total:cantidad*costo, usuario:user.usuario};
-  db.compras.unshift(compra);
+  const result = await api.addPurchase(compra, user);
+  if (!result?.ok) return alert(result?.msg || 'No se pudo registrar la compra');
+  const products = await api.getProducts(); if (Array.isArray(products)) db.productos = products;
+  await loadPurchases();
+  db.stockMovimientos = Array.isArray(db.stockMovimientos) ? db.stockMovimientos : [];
   db.stockMovimientos.unshift({fecha:compra.fecha, productoId:p.id, producto:p.descripcion, tipo:'COMPRA', cantidad, referencia:'Compra rápida', usuario:user.usuario});
-  await persist('COMPRA_REGISTRADA', p.descripcion + ' x' + cantidad + ' ' + money(compra.total));
+  render();
 };
 function crudSimple(title, key, fields) { return `<h1>${title}</h1><div class="panel"><div class="toolbar">${fields.map(f => `<input id="${key}_${f}" placeholder="${f}">`).join('')}<button onclick="addSimple('${key}','${fields.join(',')}')">Agregar</button></div><table class="table"><tr>${fields.map(f => `<th>${f}</th>`).join('')}<th></th></tr>${db[key].map(x => `<tr>${fields.map(f => `<td>${esc(x[f] || '')}</td>`).join('')}<td><button class="danger" onclick="delSimple('${key}',${x.id})">Eliminar</button></td></tr>`).join('')}</table></div>`; }
 window.addSimple = async (key, fields) => { const fs = fields.split(','); const obj = { id: Date.now(), activo: true }; fs.forEach(f => obj[f] = $(`#${key}_${f}`).value); db[key].unshift(obj); await persist(key.toUpperCase() + '_AGREGADO', obj.nombre || ''); };
@@ -565,4 +603,20 @@ window.exportCSV = type => { let rows = []; if (type === 'productos') rows = [['
 window.updateSaleField = updateSaleField;
 window.refreshSaleTotals = refreshSaleTotals;
 window.unlockPOSControls = unlockPOSControls;
-init();
+try {
+  init();
+} catch (err) {
+  console.error('Fatal error during init():', err);
+  try {
+    document.getElementById('app').innerHTML = `<div style="padding:20px;background:#111;color:#fff"><h2>Error al iniciar la aplicación</h2><pre style="white-space:pre-wrap;color:#ffb3b3">${String(err)}</pre><p>Revisá la consola para más detalles.</p></div>`;
+  } catch (e) {}
+}
+
+// Global handler to avoid silent black screens
+window.addEventListener('error', function (ev) {
+  console.error('Unhandled error', ev.error || ev.message || ev);
+  try {
+    const appEl = document.getElementById('app');
+    if (appEl) appEl.innerHTML = `<div style="padding:20px;background:#111;color:#fff"><h2>Error inesperado</h2><pre style="white-space:pre-wrap;color:#ffb3b3">${String(ev.error || ev.message || ev)}</pre></div>`;
+  } catch (e) {}
+});

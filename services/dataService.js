@@ -16,6 +16,11 @@
     saveClient: async function(client,user){ return _api.saveClient ? await _api.saveClient({client,user}) : null; },
     deleteClient: async function(id,user){ return _api.deleteClient ? await _api.deleteClient({id,user}) : null; },
     addClientPurchase: async function(clientId,purchase){ return _api.addClientPurchase ? await _api.addClientPurchase({clientId,purchase}) : null; },
+    getSuppliers: async function(){ return _api.getSuppliers ? await _api.getSuppliers() : []; },
+    saveSupplier: async function(supplier,user){ return _api.saveSupplier ? await _api.saveSupplier({supplier,user}) : null; },
+    deleteSupplier: async function(id,user){ return _api.deleteSupplier ? await _api.deleteSupplier({id,user}) : null; },
+    getPurchases: async function(){ return _api.getPurchases ? await _api.getPurchases() : []; },
+    addPurchase: async function(purchase,user){ return _api.addPurchase ? await _api.addPurchase({purchase,user}) : null; },
     backup: async function(){ return _api.backup ? await _api.backup() : null; },
     ticket: async function(venta,negocio){ return _api.ticket ? await _api.ticket(venta,negocio) : null; },
     printers: async function(){ return _api.printers ? await _api.printers() : []; }
